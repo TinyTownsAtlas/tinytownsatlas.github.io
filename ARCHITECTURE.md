@@ -45,6 +45,12 @@ the brief explicitly asks to avoid React unless concretely needed.
 - **MapLibre GL JS**, vector/raster basemap via a free, keyless tile source (raster OpenStreetMap
   standard tiles — no token, no paid service, consistent with "avoid paid map services"). Only the basemap
   tiles are remote at runtime; all town data is local static JSON/GeoJSON.
+  **Production-traffic warning:** `tile.openstreetmap.org` is OSM's shared, volunteer-funded tile
+  service, governed by its own [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/),
+  and is meant for light/development use, not sustained public traffic. It is acceptable for this
+  initial low-traffic prototype at `tinytownsatlas.github.io` but should be replaced with a
+  production-suitable tile provider (e.g. a paid/free-tier hosted basemap, or self-hosted tiles)
+  before the site sees substantial public traffic.
 - One GeoJSON source (`towns.geojson`) with **Point** geometry (representative point per UCL) drives
   a `circle` layer at all zooms for the MVP. This satisfies "at national zoom prefer points" and
   keeps the MVP simple; polygon rendering at close zoom is listed in the brief as a nice-to-have
@@ -97,12 +103,12 @@ the brief explicitly asks to avoid React unless concretely needed.
 ## Deployment
 
 - **GitHub Actions -> GitHub Pages.** `.github/workflows/deploy.yml` runs `npm ci && npm run build`
-  on push to `main`, then deploys `dist/` via `actions/deploy-pages`. Base path is set via Vite's
-  `base` config option to match the eventual repo name (`/tiny-towns-atlas/`), overridable by env
-  var so local `npm run build` still works with `base: '/'`.
-- Per the build prompt's Git discipline: the workflow file is written now but **not** run, pushed,
-  or connected to a live Pages deployment until explicitly instructed. No secrets are required
-  (Pages deploy uses the default `GITHUB_TOKEN`).
+  on push to `main`, then deploys `dist/` via `actions/deploy-pages`. Deployed at
+  `TinyTownsAtlas/tinytownsatlas.github.io`, an organization **root** Pages site served at
+  `https://tinytownsatlas.github.io/`. Vite's `base` config defaults to `"/"` (`vite.config.ts`),
+  which is correct for a root site; the `BASE_PATH` env var exists only in case this is ever
+  redeployed as a project Pages site under a subpath instead, and is not set in the workflow.
+- No secrets are required (Pages deploy uses the default `GITHUB_TOKEN`).
 - The Python build step (`scripts/build_data.py`, `scripts/build_geometry.py`) runs **locally**,
   ahead of time, and commits its static output (`public/data/*`) to the repo. GitHub Actions itself
   never runs Python or touches GeoPandas — this keeps the CI job to "install Node, build, deploy"

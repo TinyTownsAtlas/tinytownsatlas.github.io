@@ -42,7 +42,11 @@ python scripts/validate.py         # QA checks; exits non-zero on failure
   CC BY 4.0. Attribute Alexeev, Gwynne, Henson & Kirwan (2026) and the ABS.
 - Geometry: ABS ASGS Edition 3, Urban Centres and Localities 2021 (GDA2020), CC BY 4.0. Attribute
   the ABS.
-- Basemap tiles: &copy; OpenStreetMap contributors.
+- Basemap tiles: &copy; OpenStreetMap contributors, served from OSM's shared `tile.openstreetmap.org`.
+  **This is a low-traffic-prototype choice, not a production one** — see the OSM
+  [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) and
+  `ARCHITECTURE.md`'s "Map strategy" section. Replace with a production-suitable tile provider
+  before the site sees substantial public traffic.
 - Site code: no license file has been added yet; treat as all-rights-reserved until the project
   maintainer chooses one (see "Decisions needing human approval" in the implementation handoff).
 

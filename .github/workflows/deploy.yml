@@ -25,8 +25,8 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run build
-        env:
-          BASE_PATH: /tiny-towns-atlas/
+      # No BASE_PATH override: this repo is an organization root Pages site
+      # (tinytownsatlas.github.io), served at "/", which is vite.config.ts's default base.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
