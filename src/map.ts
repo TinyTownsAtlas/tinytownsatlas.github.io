@@ -51,6 +51,13 @@ export function createMap(
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
+  // The map container's real size can settle after MapLibre's initial layout pass (flex/grid
+  // layouts, or a container that starts hidden/zero-size), which otherwise leaves the map's
+  // internal transform out of sync with its canvas and produces an incorrect center/zoom on
+  // first paint. Keep it in sync for the container's lifetime.
+  const resizeObserver = new ResizeObserver(() => map.resize());
+  resizeObserver.observe(container);
+
   const primaryCodes = new Set(data.towns.map((t) => t.ucl_code));
   const townByCode = data.townsByCode;
 
@@ -102,6 +109,7 @@ export function createMap(
   }
 
   map.on("load", () => {
+    map.resize();
     map.addSource("towns", { type: "geojson", data: primaryGeoJSON });
 
     map.addLayer({
