@@ -42,8 +42,8 @@ the brief explicitly asks to avoid React unless concretely needed.
 
 ## Map strategy
 
-- **MapLibre GL JS**, vector/raster basemap via a free, keyless tile source (raster CARTO Positron
-  tiles — no token, no paid service, consistent with "avoid paid map services"). Only the basemap
+- **MapLibre GL JS**, vector/raster basemap via a free, keyless tile source (raster OpenStreetMap
+  standard tiles — no token, no paid service, consistent with "avoid paid map services"). Only the basemap
   tiles are remote at runtime; all town data is local static JSON/GeoJSON.
 - One GeoJSON source (`towns.geojson`) with **Point** geometry (representative point per UCL) drives
   a `circle` layer at all zooms for the MVP. This satisfies "at national zoom prefer points" and

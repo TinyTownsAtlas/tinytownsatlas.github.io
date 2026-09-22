@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tiny Towns Atlas</title>
+    <meta
+      name="description"
+      content="Health and social context across Australia's small communities."
+    />
+    <link rel="stylesheet" href="/src/style/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="topbar">
+        <div id="brand">
+          <h1>Tiny Towns Atlas</h1>
+          <p id="subtitle">Health and social context across Australia's small communities</p>
+        </div>
+        <div id="search-wrap">
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Find a town..."
+            autocomplete="off"
+            aria-label="Find a town"
+          />
+          <ul id="search-results" role="listbox" hidden></ul>
+        </div>
+      </header>
+
+      <main id="map-wrap">
+        <div id="map"></div>
+        <div id="layer-control">
+          <label for="layer-select">Map layer</label>
+          <select id="layer-select">
+            <option value="remoteness_name">Remoteness (default)</option>
+            <option value="diabetes_pct">Census-reported diabetes (opt-in)</option>
+          </select>
+        </div>
+        <div id="legend"></div>
+
+        <aside id="panel" hidden>
+          <button id="panel-close" aria-label="Close town profile">&times;</button>
+          <div id="panel-handle"></div>
+          <div id="panel-content"></div>
+        </aside>
+
+        <div id="intro-blurb">
+          <p>
+            Broad geographic categories are useful for national surveillance, but they can conceal
+            substantial variation between the individual communities inside them. This atlas shows
+            each small town as a point within a distribution &mdash; not a rank.
+          </p>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

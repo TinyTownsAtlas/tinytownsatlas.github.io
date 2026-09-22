@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-09-22T22:18:58+00:00",
+  "sources": [
+    {
+      "name": "Diabetology UCL analytic dataset",
+      "doi": "10.5281/zenodo.22783233",
+      "license": "CC BY 4.0",
+      "attribution": "Alexeev, Gwynne, Henson & Kirwan (2026); Australian Bureau of Statistics",
+      "rowCount": 1743
+    },
+    {
+      "name": "ABS ASGS Edition 3 - Urban Centres and Localities 2021 (GDA2020 shapefile)",
+      "license": "CC BY 4.0",
+      "attribution": "Australian Bureau of Statistics",
+      "matchedCount": 1743
+    }
+  ],
+  "scopeDefinition": "Primary display universe: UCL population 200-1499 (analytical choice from the Diabetology work, not an official ABS definition of a town).",
+  "primaryCount": 1148,
+  "referenceCount": 1743,
+  "defaultMapLayer": "remoteness_name",
+  "remotenessOrder": [
+    "Major Cities of Australia",
+    "Inner Regional Australia",
+    "Outer Regional Australia",
+    "Remote Australia",
+    "Very Remote Australia"
+  ]
+}
