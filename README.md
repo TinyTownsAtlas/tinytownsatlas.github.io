@@ -47,8 +47,7 @@ python scripts/validate.py         # QA checks; exits non-zero on failure
   [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) and
   `ARCHITECTURE.md`'s "Map strategy" section. Replace with a production-suitable tile provider
   before the site sees substantial public traffic.
-- Site code: no license file has been added yet; treat as all-rights-reserved until the project
-  maintainer chooses one (see "Decisions needing human approval" in the implementation handoff).
+- Site code: [MIT License](LICENSE). Does not cover the CC BY 4.0-licensed data/geometry above.
 
 Full provenance detail is in `data/manifest.yml` and `public/data/manifest.json` (generated).
 
