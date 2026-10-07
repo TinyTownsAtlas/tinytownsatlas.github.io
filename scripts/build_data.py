@@ -1,9 +1,11 @@
 """Build public/data/towns.json, towns_full.json, indicators.json, manifest.json.
 
-Reads the canonical Zenodo analytic CSV (unmodified) and the town point geometry produced by
-build_geometry.py, and writes the static JSON the frontend fetches at runtime.
+Reads the Atlas UCL dataset produced by build_analytic.py (rebuilt from the canonical PHIDU master
+workbook; reproduces the published Zenodo dataset exactly for UCLs with 200+ residents) and the
+town point geometry produced by build_geometry.py, and writes the static JSON the frontend fetches
+at runtime.
 
-Run build_geometry.py first.
+Run build_analytic.py and build_geometry.py first.
 """
 
 from __future__ import annotations
@@ -17,14 +19,16 @@ import pandas as pd
 from indicator_defs import DEFAULT_MAP_LAYER, INDICATORS
 
 ROOT = Path(__file__).resolve().parents[2]
-ANALYTIC_CSV = ROOT / "01_public_source" / "zenodo" / "diabetes_ucl_analytic_dataset.csv"
+ANALYTIC_CSV = ROOT / "06_derived_data" / "census" / "atlas_ucl_dataset.csv"
+PROVENANCE_JSON = ROOT / "06_derived_data" / "census" / "atlas_ucl_dataset_provenance.json"
 GEOJSON_POINTS = ROOT / "04_site" / "public" / "data" / "towns.geojson"
 # Display-only community tags. Editing this file (and re-running this script) is all that is
 # needed to tag another town; tags never affect scope, comparators or statistics.
 TEN4TEN_CSV = ROOT / "04_site" / "data" / "ten4ten_communities.csv"
 DATA_DIR = ROOT / "04_site" / "public" / "data"
 
-PRIMARY_MIN_POP = 200
+# Atlas product lower bound. The published diabetes paper used 200; see build_analytic.py.
+PRIMARY_MIN_POP = 100
 PRIMARY_MAX_POP = 1499
 PRECISION = 1
 
@@ -54,6 +58,12 @@ def compute_stats(series: pd.Series) -> dict:
 
 def main() -> None:
     df = pd.read_csv(ANALYTIC_CSV)
+    provenance = json.loads(PROVENANCE_JSON.read_text(encoding="utf-8"))
+    if provenance["atlasMinPopulation"] != PRIMARY_MIN_POP:
+        raise SystemExit("atlas_ucl_dataset was built with a different lower bound; re-run build_analytic.py")
+
+    def provenance_hash(filename: str) -> str:
+        return next(src["sha256"] for src in provenance["sources"] if src["path"].endswith(filename))
 
     if df.isnull().any().any():
         bad_cols = df.columns[df.isnull().any()].tolist()
@@ -120,7 +130,7 @@ def main() -> None:
         json.dumps(indicators_out, indent=None, separators=(",", ":")), encoding="utf-8"
     )
 
-    # --- towns.json (primary scope, 1,148 rows) and towns_full.json (all 1,743) ---
+    # --- towns.json (primary scope) and towns_full.json (every settlement UCL with 100+ residents) ---
     keep_cols = [
         "ucl_code",
         "ucl_name",
@@ -172,11 +182,18 @@ def main() -> None:
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "sources": [
             {
-                "name": "Diabetology UCL analytic dataset",
+                "name": "ABS 2021 Census of Population and Housing (TableBuilder), UCL extract supplied by PHIDU",
+                "license": "CC BY 4.0",
+                "attribution": "Australian Bureau of Statistics; extract prepared by PHIDU, Torrens University Australia",
+                "rowCount": int(len(df)),
+                "sha256": provenance_hash("_data_workbook-witth_details.xlsx"),
+            },
+            {
+                "name": "Diabetology UCL analytic dataset (validation reference for UCLs with 200+ residents)",
                 "doi": "10.5281/zenodo.22783233",
                 "license": "CC BY 4.0",
                 "attribution": "Alexeev, Gwynne, Henson & Kirwan (2026); Australian Bureau of Statistics",
-                "rowCount": int(len(df)),
+                "rowCount": int(provenance["counts"]["zenodoRowsReproducedExactly"]),
             },
             {
                 "name": "ABS ASGS Edition 3 - Urban Centres and Localities 2021 (GDA2020 shapefile)",
@@ -186,9 +203,13 @@ def main() -> None:
             },
         ],
         "scopeDefinition": (
-            f"Primary display universe: UCL population {PRIMARY_MIN_POP}-{PRIMARY_MAX_POP} "
-            "(analytical choice from the Diabetology work, not an official ABS definition of a town)."
+            f"Primary display universe: UCLs with {PRIMARY_MIN_POP}-{PRIMARY_MAX_POP:,} usual residents, "
+            "excluding special/non-settlement records. This is a Tiny Towns Atlas product definition, "
+            "not an ABS definition of a town. The published diabetes analysis this Atlas builds on "
+            f"used a lower bound of {provenance['paperMinPopulation']} residents."
         ),
+        "primaryMinPopulation": PRIMARY_MIN_POP,
+        "primaryMaxPopulation": PRIMARY_MAX_POP,
         "primaryCount": int(len(primary)),
         "referenceCount": int(len(df)),
         "defaultMapLayer": DEFAULT_MAP_LAYER,

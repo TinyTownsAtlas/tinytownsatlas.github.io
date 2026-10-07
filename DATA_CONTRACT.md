@@ -1,19 +1,41 @@
 # DATA CONTRACT
 
+## Population scope
+
+The Atlas's primary universe is **UCLs with 100–1,499 usual residents**, excluding special/
+non-settlement records. This is a Tiny Towns Atlas product definition, not an ABS definition of a
+town. It was lowered from 200 to 100 in October 2026 so that communities of 100–199 residents
+(relevant to Ten4Ten) are included. The published diabetes paper and its Zenodo dataset used a
+200-resident lower bound and are unchanged.
+
 ## Canonical source
 
-- Analytic dataset: `01_public_source/zenodo/diabetes_ucl_analytic_dataset.csv` (1,743 UCLs,
-  57 fields), codebook: `01_public_source/zenodo/codebook.csv`. CC BY 4.0. Zenodo DOI
-  `10.5281/zenodo.22783233`.
+- Census data: the canonical PHIDU/John Glover master workbook,
+  `05_source_archive/PHIDU_John_Glover/2026-09-23_final_delivery/_data_workbook-witth_details.xlsx`
+  (1,836 UCL records; ABS 2021 Census TableBuilder counts). `scripts/build_analytic.py` turns it into
+  `06_derived_data/census/atlas_ucl_dataset.csv` (every settlement UCL with 100+ residents; 1,803
+  rows at the October 2026 build), applying the diabetes paper's rules unchanged:
+  - special/non-settlement records excluded by name — "Remainder of State/Territory",
+    "Migratory - Offshore - Shipping", "No usual address" (27 records), cross-checked against their
+    reserved codes;
+  - 2021 Remoteness Area from the official ABS SA1-to-RA and SA1-to-UCL allocation files; a UCL must
+    lie wholly within one Remoteness Area or the build fails;
+  - the same workbook columns for every indicator count and denominator.
+
+  Every excluded record and its reason is written to `atlas_ucl_dataset_exclusions.csv`.
+- Validation reference: `01_public_source/zenodo/diabetes_ucl_analytic_dataset.csv` (1,743 UCLs
+  with 200+ residents, the paper's sample), codebook `01_public_source/zenodo/codebook.csv`. CC BY
+  4.0. Zenodo DOI `10.5281/zenodo.22783233`. `build_analytic.py` fails unless its 200+ subset
+  reproduces this file exactly (codes, population, counts, denominators, state, Remoteness Area).
 - Geometry: ABS ASGS Edition 3, "Urban Centres and Localities — 2021 — Shapefile", GDA2020,
   downloaded from abs.gov.au (`UCL_2021_AUST_GDA2020_SHP.zip`, 1,837 UCL features). CC BY 4.0.
   Join key: analytic `ucl_code` (e.g. `UCL101001`) == `"UCL" + shapefile UCL_CODE21`
-  (e.g. `101001`). All 1,743 analytic codes matched 1:1 against the shapefile with zero
+  (e.g. `101001`). All 1,803 Atlas codes matched 1:1 against the shapefile with zero
   unmatched and zero duplicates (verified at build time; see `scripts/validate.py`).
 
 Both sources are used unmodified as their own provenance record; neither is edited in place.
 
-## Source fields (as delivered, verbatim from codebook.csv)
+## Source fields (Atlas dataset; names follow the Zenodo codebook.csv)
 
 Identifiers: `ucl_code`, `ucl_name`, `state_code`, `state_name`.
 Geography: `remoteness_code`, `remoteness_name` (1=Major Cities … 5=Very Remote, derived by the
@@ -34,9 +56,9 @@ never assume "out of population".
 
 ## Derived public fields (computed at build time, in `scripts/build_data.py`)
 
-- `scope`: `"primary"` if `200 <= population <= 1499`, else `"reference_only"`. Drives what is shown
-  on the map (primary universe only) vs. what is available for comparator distributions (full
-  1,743-row reference set).
+- `scope`: `"primary"` if `100 <= population <= 1499`, else `"reference_only"`. Drives what is shown
+  on the map and used in comparator distributions (primary universe only) vs. the full 1,803-row
+  reference set kept for validation.
 - `remoteness_group_stats` / `national_stats`: per-indicator median, Q1, Q3, P10, P90, n, computed
   once at build time over (a) all primary-scope towns and (b) each Remoteness Area's primary-scope
   towns. Stored in `indicators.json` (not per-town), so the frontend never recomputes distribution
@@ -56,15 +78,17 @@ precomputed per-town).
 
 ## Comparator groups
 
-Exactly two, both defined over **primary-scope towns only** (population 200–1,499):
+Exactly two, both defined over **primary-scope towns only** (population 100–1,499):
 
-1. **National tiny-town distribution** — all 1,148 primary-scope UCLs.
+1. **National tiny-town distribution** — all primary-scope UCLs (1,208 at the October 2026 build;
+   1,148 before the lower bound changed from 200 to 100).
 2. **Same-Remoteness-Area distribution** — primary-scope UCLs sharing the selected town's
    `remoteness_name` (five possible groups; group sizes vary and are always shown, e.g. "n=214").
 
-The full 1,743-row reference dataset (`towns_full.json`) exists only for build-time validation and
-for any future reference-distribution view explicitly requested (per brief: "Keep the full
-1,743-UCL public analytic dataset available for reference distributions and validation"); the MVP
+The full reference dataset (`towns_full.json`, every settlement UCL with 100+ residents) exists
+only for build-time validation and for any future reference-distribution view explicitly requested
+(per brief: "Keep the full public analytic dataset available for reference distributions and
+validation"); the MVP
 UI does not surface a third comparator group against it, to avoid multiplying distributions beyond
 what the brief's MVP scope (national + same-Remoteness-Area) asks for.
 
@@ -90,7 +114,7 @@ a row to the CSV and re-run `build_data.py` and `validate.py`; no application co
 
 ## Missing-data handling
 
-The 1,743-row analytic dataset has **zero missing values** in any of the fields listed above
+The Atlas dataset has **zero missing values** in any of the fields listed above
 (verified at build time: `diabetes_pct` and all other `*_pct`/`*_count` fields are fully populated
 for every row — ABS Census TableBuilder small-cell perturbation adjusts small counts but does not
 suppress them here). `validate.py` asserts this on every build and **fails the build** if a future
@@ -136,7 +160,7 @@ never a zero, blank, or interpolated value, and exclude the town from that indic
       "Small towns: based on a small denominator; treat as indicative, not precise."
     ],
     "source": "ABS 2021 Census of Population and Housing, TableBuilder",
-    "nationalStats": { "median": 5.67, "q1": 0, "q3": 0, "p10": 0, "p90": 0, "n": 1148 },
+    "nationalStats": { "median": 5.8, "q1": 4.2, "q3": 7.7, "p10": 3.3, "p90": 9.6, "n": 1208 },
     "remotenessStats": { "Major Cities of Australia": { "median": 0, "...": 0, "n": 0 }, "...": {} }
   }
 }
@@ -152,7 +176,14 @@ lint step (`validate.py`, run before `npm run build`) fails if any indicator lac
   "generatedAt": "2026-09-23T00:00:00Z",
   "sources": [
     {
-      "name": "Diabetology UCL analytic dataset",
+      "name": "ABS 2021 Census of Population and Housing (TableBuilder), UCL extract supplied by PHIDU",
+      "license": "CC BY 4.0",
+      "attribution": "Australian Bureau of Statistics; extract prepared by PHIDU, Torrens University Australia",
+      "rowCount": 1803,
+      "sha256": "..."
+    },
+    {
+      "name": "Diabetology UCL analytic dataset (validation reference for UCLs with 200+ residents)",
       "doi": "10.5281/zenodo.22783233",
       "license": "CC BY 4.0",
       "attribution": "Alexeev, Gwynne, Henson & Kirwan (2026); Australian Bureau of Statistics",
@@ -162,13 +193,14 @@ lint step (`validate.py`, run before `npm run build`) fails if any indicator lac
       "name": "ABS ASGS Edition 3 — Urban Centres and Localities 2021 (GDA2020 shapefile)",
       "license": "CC BY 4.0",
       "attribution": "Australian Bureau of Statistics",
-      "featureCount": 1837,
-      "matchedCount": 1743
+      "matchedCount": 1803
     }
   ],
-  "scopeDefinition": "Primary display universe: UCL population 200-1,499 (analytical choice, not an ABS town definition).",
-  "primaryCount": 1148,
-  "referenceCount": 1743
+  "scopeDefinition": "Primary display universe: UCLs with 100-1,499 usual residents, excluding special/non-settlement records. ...",
+  "primaryMinPopulation": 100,
+  "primaryMaxPopulation": 1499,
+  "primaryCount": 1208,
+  "referenceCount": 1803
 }
 ```
 
@@ -188,7 +220,7 @@ Enforced structurally, not just by convention:
 - Distribution charts show the selected town positioned among *all* other towns' raw values
   (a strip/rug plot ordered by indicator value, which is the standard, honest way to show "where
   does this one point sit in this distribution" — this is not a ranking, it carries no ordinal
-  number, label, or "town N of 1148" text, and adjacent towns are not identified unless hovered).
+  number, label, or "town N of 1208" text, and adjacent towns are not identified unless hovered).
 - `indigenous_pct` is present in `indicators.json` under `category: "context"`, `isDefaultMapLayer:
   false`, and is never selectable as the map's disease/health layer — it can only appear in the
   town panel's descriptive "People and context" section, alongside the other social indicators,

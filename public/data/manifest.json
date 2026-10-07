@@ -1,8 +1,15 @@
 {
-  "generatedAt": "2026-10-07T21:51:35+00:00",
+  "generatedAt": "2026-10-07T22:12:34+00:00",
   "sources": [
     {
-      "name": "Diabetology UCL analytic dataset",
+      "name": "ABS 2021 Census of Population and Housing (TableBuilder), UCL extract supplied by PHIDU",
+      "license": "CC BY 4.0",
+      "attribution": "Australian Bureau of Statistics; extract prepared by PHIDU, Torrens University Australia",
+      "rowCount": 1803,
+      "sha256": "356349d2fb410037c02d0219071dd6f29c53bfb79c6c01fc34c3cbce08937e8e"
+    },
+    {
+      "name": "Diabetology UCL analytic dataset (validation reference for UCLs with 200+ residents)",
       "doi": "10.5281/zenodo.22783233",
       "license": "CC BY 4.0",
       "attribution": "Alexeev, Gwynne, Henson & Kirwan (2026); Australian Bureau of Statistics",
@@ -12,12 +19,14 @@
       "name": "ABS ASGS Edition 3 - Urban Centres and Localities 2021 (GDA2020 shapefile)",
       "license": "CC BY 4.0",
       "attribution": "Australian Bureau of Statistics",
-      "matchedCount": 1743
+      "matchedCount": 1803
     }
   ],
-  "scopeDefinition": "Primary display universe: UCL population 200-1499 (analytical choice from the Diabetology work, not an official ABS definition of a town).",
-  "primaryCount": 1148,
-  "referenceCount": 1743,
+  "scopeDefinition": "Primary display universe: UCLs with 100-1,499 usual residents, excluding special/non-settlement records. This is a Tiny Towns Atlas product definition, not an ABS definition of a town. The published diabetes analysis this Atlas builds on used a lower bound of 200 residents.",
+  "primaryMinPopulation": 100,
+  "primaryMaxPopulation": 1499,
+  "primaryCount": 1208,
+  "referenceCount": 1803,
   "defaultMapLayer": "remoteness_name",
   "remotenessOrder": [
     "Major Cities of Australia",

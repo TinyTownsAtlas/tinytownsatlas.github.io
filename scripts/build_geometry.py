@@ -33,7 +33,8 @@ SHAPEFILE = (
     / "UCL_2021_AUST_GDA2020_SHP"
     / "UCL_2021_AUST_GDA2020.shp"
 )
-ANALYTIC_CSV = ROOT / "01_public_source" / "zenodo" / "diabetes_ucl_analytic_dataset.csv"
+# Atlas UCL dataset built by build_analytic.py (population >= 100, special records excluded).
+ANALYTIC_CSV = ROOT / "06_derived_data" / "census" / "atlas_ucl_dataset.csv"
 OUT_POINTS_PATH = ROOT / "04_site" / "public" / "data" / "towns.geojson"
 OUT_POLYGONS_PATH = ROOT / "04_site" / "public" / "data" / "towns_polygons.geojson"
 

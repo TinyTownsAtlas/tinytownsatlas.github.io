@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "public" / "data"
 
-EXPECTED_PRIMARY_COUNT = 1148
-EXPECTED_FULL_COUNT = 1743
-PRIMARY_MIN_POP = 200
+# Atlas product scope (the published diabetes paper used a 200 lower bound; see build_analytic.py).
+PRIMARY_MIN_POP = 100
 PRIMARY_MAX_POP = 1499
+# Regression anchors from the published Zenodo dataset (population >= 200). Expanding the lower
+# bound must leave these subsets unchanged.
+PUBLISHED_REFERENCE_COUNT = 1743
+PUBLISHED_PRIMARY_200_COUNT = 1148
+SPECIAL_NAME = re.compile(r"Remainder|Migratory|No usual address", re.IGNORECASE)
 REMOTENESS_NAMES = {
     "Major Cities of Australia",
     "Inner Regional Australia",
@@ -35,10 +40,22 @@ def main() -> int:
     manifest = json.loads((DATA_DIR / "manifest.json").read_text(encoding="utf-8"))
     geo = json.loads((DATA_DIR / "towns.geojson").read_text(encoding="utf-8"))
 
-    # Row counts
-    check(len(towns) == EXPECTED_PRIMARY_COUNT, f"towns.json has {len(towns)} rows, expected {EXPECTED_PRIMARY_COUNT}")
-    check(len(towns_full) == EXPECTED_FULL_COUNT, f"towns_full.json has {len(towns_full)} rows, expected {EXPECTED_FULL_COUNT}")
-    check(len(geo["features"]) == EXPECTED_FULL_COUNT, f"towns.geojson has {len(geo['features'])} features, expected {EXPECTED_FULL_COUNT}")
+    # Row counts: derived from the full settlement dataset, not hard-coded
+    expected_primary = sum(PRIMARY_MIN_POP <= t["population"] <= PRIMARY_MAX_POP for t in towns_full)
+    expected_full = len(towns_full)
+    check(len(towns) == expected_primary, f"towns.json has {len(towns)} rows, expected {expected_primary}")
+    check(len(geo["features"]) == expected_full, f"towns.geojson has {len(geo['features'])} features, expected {expected_full}")
+    check(min(t["population"] for t in towns_full) >= PRIMARY_MIN_POP, "towns_full.json contains a UCL below the lower bound")
+    for t in towns_full:
+        check(not SPECIAL_NAME.search(t["ucl_name"]), f"{t['ucl_code']} {t['ucl_name']!r} is a special/non-settlement record")
+    check(
+        sum(t["population"] >= 200 for t in towns_full) == PUBLISHED_REFERENCE_COUNT,
+        f"UCLs with 200+ residents != published {PUBLISHED_REFERENCE_COUNT}",
+    )
+    check(
+        sum(t["population"] >= 200 for t in towns) == PUBLISHED_PRIMARY_200_COUNT,
+        f"Primary UCLs with 200+ residents != published {PUBLISHED_PRIMARY_200_COUNT}",
+    )
 
     # Unique UCL codes
     codes = [t["ucl_code"] for t in towns]
@@ -59,7 +76,7 @@ def main() -> int:
     for t in towns:
         check(t["remoteness_name"] in REMOTENESS_NAMES, f"{t['ucl_code']} has unexpected remoteness_name {t['remoteness_name']!r}")
         remoteness_counts[t["remoteness_name"]] = remoteness_counts.get(t["remoteness_name"], 0) + 1
-    check(sum(remoteness_counts.values()) == EXPECTED_PRIMARY_COUNT, "Remoteness group counts do not sum to primary total")
+    check(sum(remoteness_counts.values()) == expected_primary, "Remoteness group counts do not sum to primary total")
 
     # Indicator ranges + metadata completeness
     for key, meta in indicators.items():
@@ -69,10 +86,10 @@ def main() -> int:
         lo, hi = meta["domain"]
         check(0 <= lo <= 100 and 0 <= hi <= 100, f"Indicator {key} domain {meta['domain']} outside [0,100]")
         ns = meta["nationalStats"]
-        check(ns["n"] == EXPECTED_PRIMARY_COUNT, f"Indicator {key} nationalStats.n={ns['n']}, expected {EXPECTED_PRIMARY_COUNT}")
+        check(ns["n"] == expected_primary, f"Indicator {key} nationalStats.n={ns['n']}, expected {expected_primary}")
         check(
-            sum(rs["n"] for rs in meta["remotenessStats"].values()) == EXPECTED_PRIMARY_COUNT,
-            f"Indicator {key} remotenessStats counts do not sum to {EXPECTED_PRIMARY_COUNT}",
+            sum(rs["n"] for rs in meta["remotenessStats"].values()) == expected_primary,
+            f"Indicator {key} remotenessStats counts do not sum to {expected_primary}",
         )
 
     for t in towns:
@@ -81,9 +98,12 @@ def main() -> int:
             check(0 <= v <= 100, f"{t['ucl_code']} indicator {key}={v} outside [0,100]")
 
     # Manifest / provenance presence
-    check(manifest.get("primaryCount") == EXPECTED_PRIMARY_COUNT, "manifest.primaryCount mismatch")
-    check(manifest.get("referenceCount") == EXPECTED_FULL_COUNT, "manifest.referenceCount mismatch")
-    check(len(manifest.get("sources", [])) >= 2, "manifest.sources should list both data sources")
+    check(manifest.get("primaryCount") == expected_primary, "manifest.primaryCount mismatch")
+    check(manifest.get("primaryMinPopulation") == PRIMARY_MIN_POP, "manifest.primaryMinPopulation mismatch")
+    check(manifest.get("primaryMaxPopulation") == PRIMARY_MAX_POP, "manifest.primaryMaxPopulation mismatch")
+    check(f"{PRIMARY_MIN_POP}-" in manifest.get("scopeDefinition", ""), "manifest.scopeDefinition does not state the lower bound")
+    check(manifest.get("referenceCount") == expected_full, "manifest.referenceCount mismatch")
+    check(len(manifest.get("sources", [])) >= 3, "manifest.sources should list Census extract, validation reference and geometry")
     for src in manifest.get("sources", []):
         check(bool(src.get("license")), f"manifest source {src.get('name')} missing license")
         check(bool(src.get("attribution")), f"manifest source {src.get('name')} missing attribution")

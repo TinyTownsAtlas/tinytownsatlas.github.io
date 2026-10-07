@@ -18,14 +18,15 @@ Static, client-only site. No backend, no database, no runtime Python.
     style/                  CSS (plain CSS, no framework)
   public/
     data/
-      towns.json            1,148-row town index (MVP display universe)
-      towns_full.json       1,743-row reference dataset (comparators, distributions)
-      towns.geojson         point + simplified polygon geometry for the 1,148 towns
+      towns.json            primary town index, population 100-1,499 (display + comparator universe)
+      towns_full.json       every settlement UCL with 100+ residents (reference/validation)
+      towns.geojson         point geometry for every town in towns_full.json
       indicators.json       indicator metadata (labels, units, precision, caveats, "never rank" flags)
       manifest.json         provenance: source DOI, ABS product versions, build date, row counts
   scripts/                  Python build-time scripts (not shipped to the browser)
     fetch_geometry.py       (manual/documented step: uses already-downloaded ABS shapefile)
-    build_data.py           analytic CSV -> public/data/towns.json, towns_full.json, indicators.json
+    build_analytic.py       PHIDU master workbook + ABS SA1 files -> 06_derived_data/census/atlas_ucl_dataset.csv
+    build_data.py           Atlas dataset -> public/data/towns.json, towns_full.json, indicators.json
     build_geometry.py       ABS shapefile -> public/data/towns.geojson (filtered, simplified, joined)
     validate.py             QA checks (Phase-3 "QA" section of the build prompt)
   data/
