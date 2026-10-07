@@ -8,6 +8,11 @@ export function renderTownPanel(root: HTMLElement, data: AtlasData, town: Town):
   const header = document.createElement("div");
   header.className = "panel-header";
   header.innerHTML = `
+    ${
+      data.ten4ten.uclCodes.has(town.ucl_code)
+        ? `<span class="community-badge">${escapeHtml(data.ten4ten.label)}</span>`
+        : ""
+    }
     <h2>${escapeHtml(town.ucl_name)}</h2>
     <p class="panel-subheader">${escapeHtml(town.state_name)} · ${escapeHtml(town.remoteness_name)}</p>
     <p class="panel-population">Population ${formatPopulation(town.population)}</p>

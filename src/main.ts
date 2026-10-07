@@ -7,7 +7,7 @@ import { renderLegend } from "./legend";
 
 async function main(): Promise<void> {
   const data = await loadAtlasData();
-  const searchIndex = buildSearchIndex(data.towns);
+  const searchIndex = buildSearchIndex(data.towns, data.ten4ten.uclCodes);
   const store = new StateStore(readStateFromUrl());
 
   const panelEl = document.getElementById("panel") as HTMLElement;
@@ -81,6 +81,12 @@ async function main(): Promise<void> {
       const li = document.createElement("li");
       li.setAttribute("role", "option");
       li.textContent = `${town.ucl_name}, ${town.state_name}`;
+      if (data.ten4ten.uclCodes.has(town.ucl_code)) {
+        const badge = document.createElement("span");
+        badge.className = "community-badge";
+        badge.textContent = "Ten4Ten";
+        li.append(" ", badge);
+      }
       li.addEventListener("click", () => {
         store.selectTown(town.ucl_code);
         searchInput.value = town.ucl_name;

@@ -93,6 +93,15 @@ def main() -> int:
         check("lon" in t and "lat" in t, f"{t['ucl_code']} missing lon/lat")
         check(-180 <= t["lon"] <= 180 and -90 <= t["lat"] <= 90, f"{t['ucl_code']} lon/lat out of range")
 
+    # Ten4Ten tags: display-only, every tagged town is an existing primary-scope town
+    ten4ten = json.loads((DATA_DIR / "ten4ten.json").read_text(encoding="utf-8"))
+    tag_codes = ten4ten.get("uclCodes", [])
+    check(bool(ten4ten.get("label")), "ten4ten.json missing label")
+    check(len(tag_codes) == len(set(tag_codes)), "Duplicate ucl_code in ten4ten.json")
+    primary_codes = set(codes)
+    for code in tag_codes:
+        check(code in primary_codes, f"ten4ten.json tags {code}, which is not a primary-scope town")
+
     if errors:
         print(f"VALIDATION FAILED: {len(errors)} error(s)")
         for e in errors[:50]:
@@ -104,6 +113,7 @@ def main() -> int:
     print(f"  reference towns: {len(towns_full)}")
     print(f"  indicators: {len(indicators)}")
     print(f"  remoteness groups: {remoteness_counts}")
+    print(f"  Ten4Ten tagged towns: {len(tag_codes)}")
     return 0
 
 

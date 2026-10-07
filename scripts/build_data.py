@@ -19,6 +19,9 @@ from indicator_defs import DEFAULT_MAP_LAYER, INDICATORS
 ROOT = Path(__file__).resolve().parents[2]
 ANALYTIC_CSV = ROOT / "01_public_source" / "zenodo" / "diabetes_ucl_analytic_dataset.csv"
 GEOJSON_POINTS = ROOT / "04_site" / "public" / "data" / "towns.geojson"
+# Display-only community tags. Editing this file (and re-running this script) is all that is
+# needed to tag another town; tags never affect scope, comparators or statistics.
+TEN4TEN_CSV = ROOT / "04_site" / "data" / "ten4ten_communities.csv"
 DATA_DIR = ROOT / "04_site" / "public" / "data"
 
 PRIMARY_MIN_POP = 200
@@ -151,6 +154,19 @@ def main() -> None:
         json.dumps(towns_full, separators=(",", ":")), encoding="utf-8"
     )
 
+    # --- ten4ten.json: display-only community tags (towns must already be in the primary scope) ---
+    tags = pd.read_csv(TEN4TEN_CSV, dtype=str)
+    if tags["ucl_code"].duplicated().any():
+        raise SystemExit("Duplicate ucl_code in ten4ten_communities.csv")
+    primary_names = dict(zip(primary["ucl_code"], primary["ucl_name"]))
+    for code, name in zip(tags["ucl_code"], tags["ucl_name"]):
+        if code not in primary_names:
+            raise SystemExit(f"Ten4Ten tag {code} ({name}) is not a primary-scope town")
+        if primary_names[code] != name:
+            raise SystemExit(f"Ten4Ten tag {code}: name {name!r} != dataset name {primary_names[code]!r}")
+    ten4ten_out = {"label": "Ten4Ten community", "uclCodes": sorted(tags["ucl_code"])}
+    (DATA_DIR / "ten4ten.json").write_text(json.dumps(ten4ten_out, indent=2), encoding="utf-8")
+
     # --- manifest.json ---
     manifest = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -183,6 +199,7 @@ def main() -> None:
     print(f"towns.json: {len(towns_primary)} rows")
     print(f"towns_full.json: {len(towns_full)} rows")
     print(f"indicators.json: {len(indicators_out)} indicators")
+    print(f"ten4ten.json: {len(ten4ten_out['uclCodes'])} tagged town(s)")
     print("manifest.json written")
 
 

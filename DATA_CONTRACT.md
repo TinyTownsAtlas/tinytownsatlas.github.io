@@ -68,6 +68,15 @@ for any future reference-distribution view explicitly requested (per brief: "Kee
 UI does not surface a third comparator group against it, to avoid multiplying distributions beyond
 what the brief's MVP scope (national + same-Remoteness-Area) asks for.
 
+## Community tags (Ten4Ten)
+
+`data/ten4ten_communities.csv` (`ucl_code`, `ucl_name`) lists towns tagged as Ten4Ten
+communities. `build_data.py` checks each entry is an existing primary-scope town with a matching
+name and writes `public/data/ten4ten.json`; `validate.py` re-checks it. The tag is display-only: a
+badge on the town profile and in search results, and the search query "Ten4Ten" lists all tagged
+towns. It never changes scope, comparator groups, statistics or counts. To tag another town, add
+a row to the CSV and re-run `build_data.py` and `validate.py`; no application code changes.
+
 ## Display precision
 
 - Percentages: **one decimal place** (e.g. `4.5%`), except where the underlying denominator is

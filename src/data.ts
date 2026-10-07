@@ -59,25 +59,42 @@ export interface Manifest {
   remotenessOrder: string[];
 }
 
+/** Display-only community tag (e.g. Ten4Ten). Never affects scope, comparators or statistics. */
+export interface CommunityTag {
+  label: string;
+  uclCodes: Set<string>;
+}
+
 export interface AtlasData {
   towns: Town[];
   townsByCode: Map<string, Town>;
   indicators: Record<string, Indicator>;
   manifest: Manifest;
   pointsGeoJSON: GeoJSON.FeatureCollection;
+  ten4ten: CommunityTag;
 }
 
 const base = import.meta.env.BASE_URL;
 
 export async function loadAtlasData(): Promise<AtlasData> {
-  const [towns, indicators, manifest, pointsGeoJSON] = await Promise.all([
+  const [towns, indicators, manifest, pointsGeoJSON, ten4ten] = await Promise.all([
     fetch(`${base}data/towns.json`).then((r) => r.json() as Promise<Town[]>),
     fetch(`${base}data/indicators.json`).then((r) => r.json() as Promise<Record<string, Indicator>>),
     fetch(`${base}data/manifest.json`).then((r) => r.json() as Promise<Manifest>),
     fetch(`${base}data/towns.geojson`).then((r) => r.json() as Promise<GeoJSON.FeatureCollection>),
+    fetch(`${base}data/ten4ten.json`).then(
+      (r) => r.json() as Promise<{ label: string; uclCodes: string[] }>,
+    ),
   ]);
 
   const townsByCode = new Map(towns.map((t) => [t.ucl_code, t]));
 
-  return { towns, townsByCode, indicators, manifest, pointsGeoJSON };
+  return {
+    towns,
+    townsByCode,
+    indicators,
+    manifest,
+    pointsGeoJSON,
+    ten4ten: { label: ten4ten.label, uclCodes: new Set(ten4ten.uclCodes) },
+  };
 }

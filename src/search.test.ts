@@ -47,4 +47,11 @@ describe("search", () => {
   it("returns nothing when no match", () => {
     expect(search(index, "zzz")).toEqual([]);
   });
+
+  it("lists tagged Ten4Ten communities for a Ten4Ten query", () => {
+    const tagged = buildSearchIndex(towns, new Set(["UCL3", "UCL1"]));
+    expect(search(tagged, "Ten4Ten").map((t) => t.ucl_name)).toEqual(["Batlow", "Tumbarumba"]);
+    expect(search(tagged, "ten 4 ten").map((t) => t.ucl_name)).toEqual(["Batlow", "Tumbarumba"]);
+    expect(search(index, "ten4ten")).toEqual([]);
+  });
 });
