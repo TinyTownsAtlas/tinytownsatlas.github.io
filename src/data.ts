@@ -68,9 +68,9 @@ export interface CommunityTag {
 }
 
 /** Badge text for a tagged town, e.g. "Ten4Ten community · King Island". */
-export function communityBadgeText(tag: CommunityTag, uclCode: string, base = tag.label): string {
+export function communityBadgeText(tag: CommunityTag, uclCode: string): string {
   const community = tag.communityLabels.get(uclCode);
-  return community ? `${base} · ${community}` : base;
+  return community ? `${tag.label} · ${community}` : tag.label;
 }
 
 export interface AtlasData {

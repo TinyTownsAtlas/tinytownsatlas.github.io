@@ -1,4 +1,4 @@
-import { communityBadgeText, loadAtlasData } from "./data";
+import { loadAtlasData } from "./data";
 import { buildSearchIndex, search } from "./search";
 import { StateStore, readStateFromUrl } from "./state";
 import { createMap } from "./map";
@@ -84,7 +84,7 @@ async function main(): Promise<void> {
       if (data.ten4ten.uclCodes.has(town.ucl_code)) {
         const badge = document.createElement("span");
         badge.className = "community-badge";
-        badge.textContent = communityBadgeText(data.ten4ten, town.ucl_code, "Ten4Ten");
+        badge.textContent = "Ten4Ten";
         li.append(" ", badge);
       }
       li.addEventListener("click", () => {
