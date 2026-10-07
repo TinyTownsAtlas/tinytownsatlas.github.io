@@ -165,7 +165,10 @@ def main() -> None:
     )
 
     # --- ten4ten.json: display-only community tags (towns must already be in the primary scope) ---
-    tags = pd.read_csv(TEN4TEN_CSV, dtype=str)
+    # Optional community_label: the Ten4Ten community name where it differs from the UCL name
+    # (e.g. Currie (L) -> "King Island"). Shown alongside the badge and searchable; never replaces
+    # the UCL name or geography.
+    tags = pd.read_csv(TEN4TEN_CSV, dtype=str, keep_default_na=False)
     if tags["ucl_code"].duplicated().any():
         raise SystemExit("Duplicate ucl_code in ten4ten_communities.csv")
     primary_names = dict(zip(primary["ucl_code"], primary["ucl_name"]))
@@ -174,7 +177,16 @@ def main() -> None:
             raise SystemExit(f"Ten4Ten tag {code} ({name}) is not a primary-scope town")
         if primary_names[code] != name:
             raise SystemExit(f"Ten4Ten tag {code}: name {name!r} != dataset name {primary_names[code]!r}")
-    ten4ten_out = {"label": "Ten4Ten community", "uclCodes": sorted(tags["ucl_code"])}
+    community_labels = {
+        code: label.strip()
+        for code, label in zip(tags["ucl_code"], tags.get("community_label", [""] * len(tags)))
+        if label.strip()
+    }
+    ten4ten_out = {
+        "label": "Ten4Ten community",
+        "uclCodes": sorted(tags["ucl_code"]),
+        "communityLabels": dict(sorted(community_labels.items())),
+    }
     (DATA_DIR / "ten4ten.json").write_text(json.dumps(ten4ten_out, indent=2), encoding="utf-8")
 
     # --- manifest.json ---

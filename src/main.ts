@@ -1,4 +1,4 @@
-import { loadAtlasData } from "./data";
+import { communityBadgeText, loadAtlasData } from "./data";
 import { buildSearchIndex, search } from "./search";
 import { StateStore, readStateFromUrl } from "./state";
 import { createMap } from "./map";
@@ -7,7 +7,7 @@ import { renderLegend } from "./legend";
 
 async function main(): Promise<void> {
   const data = await loadAtlasData();
-  const searchIndex = buildSearchIndex(data.towns, data.ten4ten.uclCodes);
+  const searchIndex = buildSearchIndex(data.towns, data.ten4ten.uclCodes, data.ten4ten.communityLabels);
   const store = new StateStore(readStateFromUrl());
 
   const panelEl = document.getElementById("panel") as HTMLElement;
@@ -84,7 +84,7 @@ async function main(): Promise<void> {
       if (data.ten4ten.uclCodes.has(town.ucl_code)) {
         const badge = document.createElement("span");
         badge.className = "community-badge";
-        badge.textContent = "Ten4Ten";
+        badge.textContent = communityBadgeText(data.ten4ten, town.ucl_code, "Ten4Ten");
         li.append(" ", badge);
       }
       li.addEventListener("click", () => {

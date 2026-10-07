@@ -1,6 +1,10 @@
 {
   "label": "Ten4Ten community",
   "uclCodes": [
-    "UCL121013"
-  ]
+    "UCL121013",
+    "UCL621009"
+  ],
+  "communityLabels": {
+    "UCL621009": "King Island"
+  }
 }

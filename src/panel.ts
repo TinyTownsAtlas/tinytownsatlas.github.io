@@ -1,4 +1,4 @@
-import type { AtlasData, Town } from "./data";
+import { communityBadgeText, type AtlasData, type Town } from "./data";
 import { formatCount, formatPercent, formatPopulation } from "./format";
 import { renderDistributionStrip } from "./charts";
 
@@ -10,7 +10,7 @@ export function renderTownPanel(root: HTMLElement, data: AtlasData, town: Town):
   header.innerHTML = `
     ${
       data.ten4ten.uclCodes.has(town.ucl_code)
-        ? `<span class="community-badge">${escapeHtml(data.ten4ten.label)}</span>`
+        ? `<span class="community-badge">${escapeHtml(communityBadgeText(data.ten4ten, town.ucl_code))}</span>`
         : ""
     }
     <h2>${escapeHtml(town.ucl_name)}</h2>

@@ -63,6 +63,14 @@ export interface Manifest {
 export interface CommunityTag {
   label: string;
   uclCodes: Set<string>;
+  /** Optional community name where it differs from the UCL name (e.g. Currie (L) -> King Island). */
+  communityLabels: Map<string, string>;
+}
+
+/** Badge text for a tagged town, e.g. "Ten4Ten community · King Island". */
+export function communityBadgeText(tag: CommunityTag, uclCode: string, base = tag.label): string {
+  const community = tag.communityLabels.get(uclCode);
+  return community ? `${base} · ${community}` : base;
 }
 
 export interface AtlasData {
@@ -83,7 +91,8 @@ export async function loadAtlasData(): Promise<AtlasData> {
     fetch(`${base}data/manifest.json`).then((r) => r.json() as Promise<Manifest>),
     fetch(`${base}data/towns.geojson`).then((r) => r.json() as Promise<GeoJSON.FeatureCollection>),
     fetch(`${base}data/ten4ten.json`).then(
-      (r) => r.json() as Promise<{ label: string; uclCodes: string[] }>,
+      (r) =>
+        r.json() as Promise<{ label: string; uclCodes: string[]; communityLabels?: Record<string, string> }>,
     ),
   ]);
 
@@ -95,6 +104,10 @@ export async function loadAtlasData(): Promise<AtlasData> {
     indicators,
     manifest,
     pointsGeoJSON,
-    ten4ten: { label: ten4ten.label, uclCodes: new Set(ten4ten.uclCodes) },
+    ten4ten: {
+      label: ten4ten.label,
+      uclCodes: new Set(ten4ten.uclCodes),
+      communityLabels: new Map(Object.entries(ten4ten.communityLabels ?? {})),
+    },
   };
 }

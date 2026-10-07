@@ -121,6 +121,9 @@ def main() -> int:
     primary_codes = set(codes)
     for code in tag_codes:
         check(code in primary_codes, f"ten4ten.json tags {code}, which is not a primary-scope town")
+    for code, label in ten4ten.get("communityLabels", {}).items():
+        check(code in tag_codes, f"ten4ten.json community label for untagged town {code}")
+        check(bool(label.strip()), f"ten4ten.json empty community label for {code}")
 
     if errors:
         print(f"VALIDATION FAILED: {len(errors)} error(s)")

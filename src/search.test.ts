@@ -54,4 +54,11 @@ describe("search", () => {
     expect(search(tagged, "ten 4 ten").map((t) => t.ucl_name)).toEqual(["Batlow", "Tumbarumba"]);
     expect(search(index, "ten4ten")).toEqual([]);
   });
+
+  it("matches a community alias without changing the town name", () => {
+    const aliased = buildSearchIndex(towns, new Set(["UCL2"]), new Map([["UCL2", "King Island"]]));
+    expect(search(aliased, "King Island").map((t) => t.ucl_name)).toEqual(["Berridale"]);
+    expect(search(aliased, "island").map((t) => t.ucl_name)).toEqual(["Berridale"]);
+    expect(search(aliased, "ba").map((t) => t.ucl_name)).toEqual(["Batlow", "Tumbarumba"]);
+  });
 });

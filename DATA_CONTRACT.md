@@ -94,8 +94,11 @@ what the brief's MVP scope (national + same-Remoteness-Area) asks for.
 
 ## Community tags (Ten4Ten)
 
-`data/ten4ten_communities.csv` (`ucl_code`, `ucl_name`) lists towns tagged as Ten4Ten
-communities. `build_data.py` checks each entry is an existing primary-scope town with a matching
+`data/ten4ten_communities.csv` (`ucl_code`, `ucl_name`, optional `community_label`) lists towns
+tagged as Ten4Ten communities. `community_label` gives the Ten4Ten community name where it differs
+from the UCL name (e.g. Currie (L) is the King Island community); it is shown in the badge
+("Ten4Ten community · King Island") and matched by search, but the UCL name and geography are
+unchanged. `build_data.py` checks each entry is an existing primary-scope town with a matching
 name and writes `public/data/ten4ten.json`; `validate.py` re-checks it. The tag is display-only: a
 badge on the town profile and in search results, and the search query "Ten4Ten" lists all tagged
 towns. It never changes scope, comparator groups, statistics or counts. To tag another town, add
