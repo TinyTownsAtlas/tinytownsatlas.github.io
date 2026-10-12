@@ -25,6 +25,25 @@ REMOTENESS_NAMES = {
     "Very Remote Australia",
 }
 
+# Town-level anchors checked independently against ABS 2021 Census QuickStats for the same UCL
+# (https://www.abs.gov.au/census/find-census-data/quickstats/2021/UCL121013, checked 13 October
+# 2026). Brewarrina (L): diabetes 52 (7.0%), cancer (including remission) 13 (1.7%), unemployed 13
+# of 254 in the labour force (5.1%). The 7.1% unemployment figure sometimes quoted for Brewarrina
+# is the Local Government Area (LGA11200: 34 of 481), a wider geography.
+QUICKSTATS_ANCHORS = {
+    "UCL121013": {
+        "diabetes": (52, 743, 7.0),
+        "cancer": (13, 743, 1.7),
+        "unemployment_rate": (13, 254, 5.1),
+    },
+}
+REQUIRED_HEALTH_INDICATORS = {"diabetes_pct", "cancer_pct"}
+# Context-only: may never become a map colour layer or a health outcome.
+CONTEXT_ONLY_INDICATORS = {"indigenous_pct"}
+# Replaced in the display by unemployment_rate_pct (unemployed / labour force); must not return
+# as a displayed indicator.
+RETIRED_DISPLAY_INDICATORS = {"unemployed_residents_pct"}
+
 errors: list[str] = []
 
 
@@ -92,10 +111,42 @@ def main() -> int:
             f"Indicator {key} remotenessStats counts do not sum to {expected_primary}",
         )
 
+        check(bool(meta.get("definition")), f"Indicator {key} has no definition")
+        check(meta["category"] in ("health", "context"), f"Indicator {key} has unknown category {meta['category']!r}")
+        check(
+            not meta.get("mapLayer") or meta["category"] == "health",
+            f"Indicator {key} is a map layer but not a health indicator",
+        )
+        check(meta.get("isDefaultMapLayer") is False, f"Indicator {key} must not be the default map layer")
+
+    for key in REQUIRED_HEALTH_INDICATORS:
+        check(key in indicators and indicators[key]["category"] == "health", f"Missing health indicator {key}")
+    for key in CONTEXT_ONLY_INDICATORS:
+        meta = indicators.get(key, {})
+        check(meta.get("category") == "context" and not meta.get("mapLayer"), f"{key} must stay context-only")
+    for key in RETIRED_DISPLAY_INDICATORS:
+        check(key not in indicators, f"{key} (unemployed / all residents) must not be displayed")
+    unemployment = indicators.get("unemployment_rate_pct", {})
+    check(
+        unemployment.get("denominatorField") == "unemployment_rate_denominator"
+        and "labour force" in unemployment.get("denominatorLabel", ""),
+        "unemployment_rate_pct must use the labour force denominator",
+    )
+
     for t in towns:
         for key in indicators:
             v = t[key]
             check(0 <= v <= 100, f"{t['ucl_code']} indicator {key}={v} outside [0,100]")
+
+    towns_by_code = {t["ucl_code"]: t for t in towns}
+    for code, anchors in QUICKSTATS_ANCHORS.items():
+        t = towns_by_code.get(code)
+        check(t is not None, f"Anchor town {code} missing from towns.json")
+        if t is None:
+            continue
+        for stem, (num, den, pct) in anchors.items():
+            got = (t.get(f"{stem}_count"), t.get(f"{stem}_denominator"), t.get(f"{stem}_pct"))
+            check(got == (num, den, pct), f"{code} {stem}: {got} != ABS QuickStats {(num, den, pct)}")
 
     # Manifest / provenance presence
     check(manifest.get("primaryCount") == expected_primary, "manifest.primaryCount mismatch")

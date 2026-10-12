@@ -102,6 +102,12 @@ def main() -> None:
             if len(group) > 0
         }
 
+        map_layer = bool(meta.get("mapLayer", False))
+        if map_layer and meta["category"] != "health":
+            raise SystemExit(f"Indicator {key}: only health indicators may be map layers")
+        if not meta.get("definition"):
+            raise SystemExit(f"Indicator {key} missing definition")
+
         indicators_out[key] = {
             "key": key,
             "label": meta["label"],
@@ -113,10 +119,12 @@ def main() -> None:
             "denominatorLabel": meta["denominatorLabel"],
             "category": meta["category"],
             "isDefaultMapLayer": meta["isDefaultMapLayer"],
+            "mapLayer": map_layer,
             "isRankable": False,
             "colorScale": meta["colorScale"],
             "domain": [round_stat(primary[pct_col].min()), round_stat(primary[pct_col].max())],
             "description": meta["description"],
+            "definition": meta["definition"],
             "caveats": meta["caveats"],
             "source": meta["source"],
             "nationalStats": national_stats,

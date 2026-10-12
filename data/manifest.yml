@@ -33,10 +33,14 @@ scope_definition: >
 primary_count: 1208
 reference_count: 1803
 
+indicators_added_2026_10:
+  - "cancer_pct: Census-reported cancer (including remission), P_Cancer_Tot / Tot_P_P (LTHP block)"
+  - "unemployment_rate_pct: unemployed / labour force (LFSP block); replaces the displayed unemployed_residents_pct (unemployed / all usual residents)"
+
 excluded_from_v0_1:
   - Brewarrina/Ten4Ten participant screening data
   - confidential Ten4Ten community reports
-  - custom PHIDU hospitalisation/ED/PPH/mortality workbooks
+  - custom PHIDU hospitalisation/ED/PPH/mortality workbooks (PHA-allocated estimates, CC BY-NC-SA 3.0 AU; still excluded, see DATA_CONTRACT.md)
   - older Small Towns empirical estimates
   - the old composite chronic-burden index
   - historical panel data not delivered/verified

@@ -1,14 +1,11 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { AtlasData } from "./data";
+import { colorExpression, getMapLayers, type MapLayer } from "./layers";
 
-const REMOTENESS_COLORS: Record<string, string> = {
-  "Major Cities of Australia": "#4c78a8",
-  "Inner Regional Australia": "#72b7b2",
-  "Outer Regional Australia": "#eeca3b",
-  "Remote Australia": "#f58518",
-  "Very Remote Australia": "#e45756",
-};
+// Dot styling shared with the legend swatches (see legend.ts), so the legend shows the colour as
+// it is drawn on the map.
+export const DOT_STYLE = { radius: 4, strokeWidth: 1, strokeColor: "#ffffff", opacity: 0.85 };
 
 // Free, keyless OpenStreetMap standard raster tiles (no API key, no paid service).
 const BASEMAP_TILES = [
@@ -17,7 +14,7 @@ const BASEMAP_TILES = [
 
 export interface AtlasMap {
   map: maplibregl.Map;
-  setLayer(layer: string): void;
+  setLayer(layer: MapLayer): void;
   flyToTown(lon: number, lat: number): void;
   setSelected(uclCode: string | null): void;
 }
@@ -25,6 +22,7 @@ export interface AtlasMap {
 export function createMap(
   container: HTMLElement,
   data: AtlasData,
+  initialLayer: MapLayer,
   onSelect: (uclCode: string) => void,
 ): AtlasMap {
   const map = new maplibregl.Map({
@@ -61,6 +59,7 @@ export function createMap(
   const primaryCodes = new Set(data.towns.map((t) => t.ucl_code));
   const townByCode = data.townsByCode;
 
+  const layerKeys = getMapLayers(data).map((l) => l.key);
   const primaryFeatures = data.pointsGeoJSON.features.filter((f) =>
     primaryCodes.has((f.properties as { ucl_code: string }).ucl_code),
   );
@@ -73,39 +72,19 @@ export function createMap(
         ...f,
         properties: {
           ...f.properties,
-          remoteness_name: town.remoteness_name,
-          diabetes_pct: town.diabetes_pct,
+          ...Object.fromEntries(layerKeys.map((k) => [k, town[k]])),
         },
       };
     }),
   };
 
-  let currentLayer = data.manifest.defaultMapLayer;
+  // Start from the app's current layer (URL/deep link), not a fixed default, so the dots and the
+  // legend always describe the same layer.
+  let currentLayer: MapLayer = initialLayer;
   let selectedCode: string | null = null;
 
-  function remotenessColorExpression(): maplibregl.ExpressionSpecification {
-    const stops: (string | string)[] = [];
-    for (const [name, color] of Object.entries(REMOTENESS_COLORS)) {
-      stops.push(name, color);
-    }
-    return ["match", ["get", "remoteness_name"], ...stops, "#999999"] as unknown as maplibregl.ExpressionSpecification;
-  }
-
-  function diabetesColorExpression(): maplibregl.ExpressionSpecification {
-    const domain = data.indicators.diabetes_pct.domain;
-    return [
-      "interpolate",
-      ["linear"],
-      ["get", "diabetes_pct"],
-      domain[0],
-      "#fff5eb",
-      domain[1],
-      "#a63603",
-    ] as unknown as maplibregl.ExpressionSpecification;
-  }
-
-  function paintForLayer(layer: string): maplibregl.ExpressionSpecification {
-    return layer === "diabetes_pct" ? diabetesColorExpression() : remotenessColorExpression();
+  function paint(layer: MapLayer): maplibregl.ExpressionSpecification {
+    return colorExpression(layer) as unknown as maplibregl.ExpressionSpecification;
   }
 
   map.on("load", () => {
@@ -117,11 +96,11 @@ export function createMap(
       type: "circle",
       source: "towns",
       paint: {
-        "circle-radius": 4,
-        "circle-color": paintForLayer(currentLayer),
-        "circle-stroke-width": 1,
-        "circle-stroke-color": "#ffffff",
-        "circle-opacity": 0.85,
+        "circle-radius": DOT_STYLE.radius,
+        "circle-color": paint(currentLayer),
+        "circle-stroke-width": DOT_STYLE.strokeWidth,
+        "circle-stroke-color": DOT_STYLE.strokeColor,
+        "circle-opacity": DOT_STYLE.opacity,
       },
     });
 
@@ -132,7 +111,7 @@ export function createMap(
       filter: ["==", ["get", "ucl_code"], "__none__"],
       paint: {
         "circle-radius": 8,
-        "circle-color": paintForLayer(currentLayer),
+        "circle-color": paint(currentLayer),
         "circle-stroke-width": 2.5,
         "circle-stroke-color": "#111111",
       },
@@ -156,6 +135,7 @@ export function createMap(
     map.on("mousemove", "towns-circle", (e) => {
       const feature = e.features?.[0];
       if (!feature) return;
+      // Name and Remoteness Area only: no indicator values on hover (see ARCHITECTURE.md).
       const props = feature.properties as { ucl_name: string; remoteness_name: string };
       popup
         .setLngLat(e.lngLat)
@@ -165,11 +145,11 @@ export function createMap(
     map.on("mouseleave", "towns-circle", () => popup.remove());
   });
 
-  function setLayer(layer: string): void {
+  function setLayer(layer: MapLayer): void {
     currentLayer = layer;
     if (!map.getLayer("towns-circle")) return;
-    map.setPaintProperty("towns-circle", "circle-color", paintForLayer(layer));
-    map.setPaintProperty("towns-selected", "circle-color", paintForLayer(layer));
+    map.setPaintProperty("towns-circle", "circle-color", paint(layer));
+    map.setPaintProperty("towns-selected", "circle-color", paint(layer));
   }
 
   function flyToTown(lon: number, lat: number): void {

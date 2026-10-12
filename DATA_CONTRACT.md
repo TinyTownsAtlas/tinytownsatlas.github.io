@@ -46,8 +46,68 @@ long-term diabetes** (doctor/nurse-diagnosed, excludes gestational diabetes), *n
 prevalence, *not* age-standardised.
 Age structure: `age_0_4` … `age_85plus` (counts), `age0_14_pct` … `age65plus_pct` (shares).
 Context indicators (count/denominator/pct triples): `indigenous_*`, `degree_*`, `low_income_*`,
-`unemployed_residents_*`, `labour_force_residents_*`, `crowded_*`, `social_housing_*`,
-`need_assistance_*`, `born_overseas_nes_*`.
+`unemployed_residents_*` (analytic CSV only; not displayed, see below), `labour_force_residents_*`,
+`crowded_*`, `social_housing_*`, `need_assistance_*`, `born_overseas_nes_*`.
+
+### Atlas-only fields (not in the published Zenodo dataset)
+
+Read by `build_analytic.py` from the same master workbook. The build checks each column's header
+label and the Census table block it sits under (row 1), and fails if either differs.
+
+- `cancer_count`, `cancer_denominator`, `cancer_pct` — **Census-reported cancer (including
+  remission)**: workbook `P_Cancer_Tot` / `Tot_P_P` in block "LTHP Type of Long-term Health
+  Condition, 2021 Census - counting persons, place of usual residence". The ABS Census category
+  is "Cancer (including remission)" (QuickStats wording). It is a Census-reported long-term
+  condition, not cancer registry incidence, not a clinically measured prevalence, and not
+  age-standardised. National and same-Remoteness-Area distributions are computed exactly as for
+  diabetes.
+- `unemployment_rate_count`, `unemployment_rate_denominator`, `unemployment_rate_pct` — the
+  **conventional Census unemployment rate**: workbook `Unemployed` / `Labour force participation`
+  (block "LFSP Labour Force Status", place of usual residence). The "Labour force participation"
+  column is the labour force count (employed + unemployed, aged 15+); the male and female labour
+  force columns sum to it within Census perturbation (maximum difference 11 across the 1,836
+  workbook UCLs).
+
+Town-level anchors checked against ABS 2021 Census QuickStats for the same UCL
+(Brewarrina (L), UCL121013, checked 13 October 2026) and enforced by `validate.py`: diabetes 52 of
+743 (7.0%); cancer (including remission) 13 of 743 (1.7%); unemployed 13 of 254 in the labour force
+(5.1%).
+
+### Unemployment display change (October 2026)
+
+The Atlas previously displayed `unemployed_residents_pct` (unemployed / **all usual residents**,
+1.7% for Brewarrina). User feedback showed this was read as an unemployment rate even with a
+caveat. The display now uses `unemployment_rate_pct` (unemployed / labour force, 5.1% for
+Brewarrina, matching ABS QuickStats for the UCL). `unemployed_residents_*` stays in the analytic
+CSV because the published diabetes model used it and the Zenodo reproduction check compares it,
+but it is not in `indicators.json`, and `validate.py` fails if it returns there.
+
+The 7.1% figure sometimes quoted for Brewarrina is the ABS QuickStats figure for Brewarrina Local
+Government Area (LGA11200: 34 unemployed of 481 in the labour force), a wider area than the
+Brewarrina (L) UCL. Brewarrina suburb/locality (SAL10560) is different again (25 of 321, 7.8%).
+
+`labour_force_residents_pct` is still out of all usual residents (all ages), so it is labelled
+"In the labour force (of all residents)". It is not the conventional participation rate, which
+uses people aged 15+ (44.3% for Brewarrina in QuickStats versus 34.2% here).
+
+### Hospitalisation and ED estimates (PHIDU) — not displayed
+
+`05_source_archive/PHIDU_John_Glover/prior_validated_sources/Hospital_data_workbook.xlsx` holds
+PHIDU estimates by UCL: public hospital admissions (total; mental health, circulatory,
+respiratory, chronic kidney disease, injury), potentially preventable hospitalisations (all, acute,
+chronic, vaccine-preventable and selected conditions, 2020/21) and ED presentations (by triage and
+condition), each as an allocated number, an indirectly age-standardised rate per 100,000 and a
+standardised ratio. PHIDU's notes (`data_sources_notes-final.docx`) state these were produced from
+Population Health Area (PHA) data by applying each UCL's share of the PHA population, so many UCLs
+take the same value from one PHA. In the Atlas's 1,208 primary towns, 1,163 are in PHA-split
+groups (the `PHA_CODE_2021` flag in the master workbook), and the 1,208 towns have only 519
+distinct total-admissions SR values. PHIDU also cautions that where a UCL has a larger share of
+Aboriginal and Torres Strait Islander residents than its PHA, the allocated estimate needs extra
+care. This is relevant to towns such as Brewarrina (54% of usual residents; estimate allocated from
+the "Bourke - Brewarrina/ Walgett - Lightning Ridge" PHA) and Laura (Qld) (75%; "Far North (Qld)"
+PHA). The data are licensed CC BY-NC-SA 3.0 AU, unlike the
+CC BY 4.0 Census data. They are therefore not shown as town values, not used as map layers, and
+not summarised as town distributions. See the October 2026 handoff for the open decisions.
 
 Each `*_pct` field's denominator is **not always total population** (e.g. `low_income_denominator`
 is households; `crowded_denominator`/`social_housing_denominator` are enumerated population, not
@@ -153,10 +213,12 @@ never a zero, blank, or interpolated value, and exclude the town from that indic
     "denominatorLabel": "usual residents",
     "category": "health",
     "isDefaultMapLayer": false,
+    "mapLayer": true,              // opt-in map colour layer; health indicators only (enforced)
     "isRankable": false,           // always false; enforced, see below
     "colorScale": "sequential",
     "domain": [0, 15.83],           // observed min/max across primary scope, from build time
     "description": "...",
+    "definition": "...",           // one sentence shown beside the value, naming the denominator
     "caveats": [
       "Census-reported diagnosed long-term diabetes, not clinical prevalence.",
       "Excludes gestational diabetes.",
@@ -169,8 +231,11 @@ never a zero, blank, or interpolated value, and exclude the town from that indic
 }
 ```
 
-Every indicator entry is required to carry `caveats` (>=1 entry) and `source`. The frontend build/
-lint step (`validate.py`, run before `npm run build`) fails if any indicator lacks either.
+Every indicator entry is required to carry `caveats` (>=1 entry), `source` and `definition`. The
+frontend build/lint step (`validate.py`, run before `npm run build`) fails if any indicator lacks
+one. `category: "health"` indicators (diabetes, cancer) populate the town panel's Health outcome
+selector, with national and same-Remoteness-Area distributions; `category: "context"` indicators
+populate "People and context". Indicators appear in `indicators.json` order.
 
 ## Provenance / licensing metadata (`public/data/manifest.json`)
 
@@ -225,7 +290,8 @@ Enforced structurally, not just by convention:
   does this one point sit in this distribution" — this is not a ranking, it carries no ordinal
   number, label, or "town N of 1208" text, and adjacent towns are not identified unless hovered).
 - `indigenous_pct` is present in `indicators.json` under `category: "context"`, `isDefaultMapLayer:
-  false`, and is never selectable as the map's disease/health layer — it can only appear in the
+  false`, `mapLayer: false` (checked by `validate.py` and `layers.test.ts`), and is never selectable
+  as the map's disease/health layer — it can only appear in the
   town panel's descriptive "People and context" section, alongside the other social indicators,
   with no color-coded map layer of its own in the MVP.
 - No leave-one-out residual, observed-vs-expected, or model-based field exists anywhere in the

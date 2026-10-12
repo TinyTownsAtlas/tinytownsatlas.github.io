@@ -8,8 +8,11 @@ Static, client-only site. No backend, no database, no runtime Python.
 04_site/
   src/
     main.ts              entry point, app shell, router/state wiring
-    state.ts              URL <-> app state (selected town, layer, panel open)
-    search.ts              client-side fuzzy/prefix search over town index
+    state.ts              URL <-> app state (selected town, map layer, health outcome)
+    search.ts              client-side prefix/substring search, with state names/abbreviations
+    layers.ts              map layer registry: remoteness palette + opt-in health layers; builds
+                           both the map paint expression and the legend input
+    legend.ts              legend for the current MapLayer
     map.ts                 MapLibre setup, layers, click/hover handlers
     charts.ts               Observable Plot distribution strips
     panel.ts                town profile panel (desktop side panel / mobile sheet)
@@ -58,10 +61,22 @@ the brief explicitly asks to avoid React unless concretely needed.
   ("can be shown") but is not required for done-ness, so it is deferred past MVP (polygon geometry
   is still produced and stored in the GeoJSON as a `polygon` property — simplified, encoded as a
   nested GeoJSON geometry string — so a later iteration can add it without a new build step).
-- Circle color = neutral default layer (Remoteness Area, categorical). An indicator picker can
-  switch the paint expression to the (opt-in) diabetes layer. Switching layers never re-sorts or
-  ranks towns; it only changes `circle-color`/`circle-radius` paint expressions driven by
-  `indicators.json` metadata (min/max domain, color scale, "categorical vs continuous").
+- Circle color = neutral default layer (Remoteness Area, categorical). The layer picker is
+  generated from data: remoteness, then every `category: "health"` indicator with
+  `mapLayer: true` in `indicators.json` (currently Census-reported diabetes and cancer). Context
+  indicators, including the Aboriginal and Torres Strait Islander share, are never map layers.
+  Switching layers never re-sorts or ranks towns; it only changes the `circle-color` paint
+  expression.
+- `layers.ts` is the only place colours are defined. The map paint expression and the legend are
+  both derived from the same `MapLayer` object, and `main.ts` applies a layer to the selector, the
+  map and the legend in one function, including on first load from a URL. (Before October 2026
+  the map started from the default layer while the legend and selector followed `?layer=`, so a
+  reloaded or shared diabetes link showed a diabetes legend over remoteness-coloured dots.)
+  `layers.test.ts` checks the expression and legend colours match and that no other module
+  hard-codes the palette.
+- PHIDU hospitalisation estimates are not a map layer: they are Population Health Area values
+  allocated to UCLs, so neighbouring towns share one value and a town-level dot colour would
+  misrepresent them. See DATA_CONTRACT.md.
 - Click on a circle (or a search result) selects a town: opens the panel, flies the map to it,
   updates URL state. Hover shows a lightweight tooltip (name, state) — no numbers in the hover
   tooltip, to avoid inviting comparison-by-hover.
@@ -80,10 +95,13 @@ the brief explicitly asks to avoid React unless concretely needed.
 
 ## URL / state handling
 
-- Single source of truth: a small `state.ts` module holds `{ selectedUclCode, layer }` and
-  serializes it to the URL via `URLSearchParams` (`?town=UCL123456&layer=diabetes`), using
+- Single source of truth: a small `state.ts` module holds `{ selectedUclCode, layer, outcome }`
+  and serializes it to the URL via `URLSearchParams`
+  (`?town=UCL123456&layer=cancer_pct&outcome=cancer_pct`; defaults are omitted), using
   `history.replaceState` on internal changes and `pushState` only on an explicit new selection, so
-  back/forward moves between towns. No router library — two URL params do not justify one.
+  back/forward moves between towns. Unknown values (e.g. `?layer=indigenous_pct`) fall back to
+  the defaults. Choosing a health map layer also shows that outcome in the town panel. No router
+  library — three URL params do not justify one.
 - On load, `main.ts` parses the URL, hydrates state, and (if `town` is present and valid) opens the
   panel and centers the map without an animated fly-to, so shared links land instantly on the right
   town.

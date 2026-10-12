@@ -7,6 +7,13 @@ for the full project brief and [`ARCHITECTURE.md`](ARCHITECTURE.md) /
 [`DATA_CONTRACT.md`](DATA_CONTRACT.md) / [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for
 how it's built.
 
+Health outcomes (opt-in map layers and the town panel's Health section): Census-reported diabetes
+and Census-reported cancer (including remission). Both are 2021 Census long-term conditions, not
+clinical or registry measures, and not age-standardised. PHIDU hospitalisation estimates are not
+shown because they are allocated from Population Health Areas rather than observed for each town
+(see `DATA_CONTRACT.md`). Unemployment is shown as the conventional Census rate (unemployed /
+labour force), which matches ABS QuickStats for the same UCL.
+
 The 100-resident lower bound is a Tiny Towns Atlas product definition, not an ABS definition of a
 town. The published diabetes paper this Atlas builds on used 200 residents; the Atlas lowered the
 bound in October 2026 to include communities of 100-199 residents. See `DATA_CONTRACT.md`.
@@ -39,7 +46,16 @@ python scripts/build_analytic.py   # PHIDU master workbook + ABS SA1 files -> 06
 python scripts/build_geometry.py   # needs the ABS UCL 2021 GDA2020 shapefile, see the script's docstring
 python scripts/build_data.py
 python scripts/validate.py         # QA checks; exits non-zero on failure
+npm test                           # unit tests (search, layers/legend, URL state, formatting)
 ```
+
+`build_analytic.py` fails unless its 200+ subset reproduces the published Zenodo dataset exactly;
+`validate.py` also checks Brewarrina (UCL121013) against ABS QuickStats values.
+
+To add another Census health outcome: add its workbook columns to `INDICATOR_COLUMNS` in
+`build_analytic.py` (with header labels), add metadata with `category: "health"` and
+`mapLayer: True` in `scripts/indicator_defs.py`, and rebuild. The panel selector, map layer
+picker and legend are generated from `indicators.json`; no frontend changes are needed.
 
 ## Sources and licensing
 

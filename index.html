@@ -24,6 +24,10 @@
             placeholder="Find a town..."
             autocomplete="off"
             aria-label="Find a town"
+            role="combobox"
+            aria-controls="search-results"
+            aria-expanded="false"
+            aria-autocomplete="list"
           />
           <ul id="search-results" role="listbox" hidden></ul>
         </div>
@@ -33,12 +37,10 @@
         <div id="map"></div>
         <div id="layer-control">
           <label for="layer-select">Map layer</label>
-          <select id="layer-select">
-            <option value="remoteness_name">Remoteness (default)</option>
-            <option value="diabetes_pct">Census-reported diabetes (opt-in)</option>
-          </select>
+          <!-- Options are generated from the data (src/layers.ts): remoteness, then opt-in health layers. -->
+          <select id="layer-select"></select>
         </div>
-        <div id="legend"></div>
+        <div id="legend" aria-live="polite"></div>
 
         <aside id="panel" hidden>
           <button id="panel-close" aria-label="Close town profile">&times;</button>

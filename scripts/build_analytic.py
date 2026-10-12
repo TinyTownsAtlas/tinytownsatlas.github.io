@@ -13,6 +13,9 @@ logic as the paper's pipeline (Diabetology `Data/Scripts/import_census.py` and
   - 2021 Remoteness Area from the official ABS SA1-to-RA and SA1-to-UCL allocation files. A UCL
     must lie wholly within one Remoteness Area; anything else stops the build.
   - Indicator counts/denominators from the same workbook columns as the published dataset.
+  - Atlas-only indicators not in the published dataset (Census-reported cancer and the
+    conventional unemployment rate, unemployed / labour force) are read from the same workbook,
+    with their column header and Census table-block labels checked.
 
 Verification: restricted to population >= 200, the output must reproduce the 1,743 published
 Zenodo UCLs exactly (same codes, population, counts, denominators, state and Remoteness Area).
@@ -82,6 +85,8 @@ POPULATION_COLUMN = (4, "Tot_P_P")
 # Atlas indicator stem -> (numerator columns summed, denominator column).
 INDICATOR_COLUMNS: dict[str, tuple[list[tuple[int, str]], tuple[int, str]]] = {
     "diabetes": ([(24, "P_Diabetes_Tot")], (25, "Tot_P_P")),
+    # Census long-term health condition "Cancer (including remission)" (LTHP), usual residents.
+    "cancer": ([(16, "P_Cancer_Tot")], (17, "Tot_P_P")),
     "indigenous": ([(449, "Indigenous population")], (450, "Tot_P_P")),
     "degree": (
         [
@@ -103,6 +108,10 @@ INDICATOR_COLUMNS: dict[str, tuple[list[tuple[int, str]], tuple[int, str]]] = {
         (258, "All households"),
     ),
     "unemployed_residents": ([(241, "Unemployed")], (242, "Tot_P_P")),
+    # Conventional Census unemployment rate: unemployed / labour force (LFSP, persons 15+). The
+    # workbook's "Labour force participation" count is the labour force (employed + unemployed);
+    # the per-sex columns 245/249 sum to it within Census perturbation.
+    "unemployment_rate": ([(241, "Unemployed")], (253, "Labour force participation")),
     "labour_force_residents": ([(253, "Labour force participation")], (254, "Tot_P_P")),
     "crowded": ([(321, "People living in crowded dwellings")], (322, "Tot_P_P")),
     "social_housing": ([(345, "Social housing (people in rented dwellings)")], (346, "Tot_P_P")),
@@ -112,6 +121,27 @@ INDICATOR_COLUMNS: dict[str, tuple[list[tuple[int, str]], tuple[int, str]]] = {
         (185, "Tot_P_P"),
     ),
 }
+
+# Stems present in the published Zenodo dataset; only these are compared in verify_against_zenodo.
+PUBLISHED_STEMS = [
+    "diabetes",
+    "indigenous",
+    "degree",
+    "low_income",
+    "unemployed_residents",
+    "labour_force_residents",
+    "crowded",
+    "social_housing",
+    "need_assistance",
+    "born_overseas_nes",
+]
+
+# Census table blocks (row 1 of the workbook) that Atlas-only indicators must sit under: the
+# block label is in the first column of each block. Checked so a moved block fails loudly.
+SECTION_LABELS = [
+    (8, "LTHP Type of Long-term Health Condition"),
+    (241, "LFSP Labour Force Status"),
+]
 
 OUTPUT_COLUMNS = [
     "ucl_code",
@@ -133,11 +163,11 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def read_master() -> tuple[tuple[object, ...], dict[str, tuple[object, ...]]]:
+def read_master() -> tuple[tuple[object, ...], tuple[object, ...], dict[str, tuple[object, ...]]]:
     workbook = openpyxl.load_workbook(MASTER_WORKBOOK, read_only=True, data_only=True)
     try:
         rows = workbook["data"].iter_rows(values_only=True)
-        next(rows)
+        sections = next(rows)
         header = next(rows)
         records: dict[str, tuple[object, ...]] = {}
         for row in rows:
@@ -150,7 +180,16 @@ def read_master() -> tuple[tuple[object, ...], dict[str, tuple[object, ...]]]:
         workbook.close()
     if len(records) != EXPECTED_MASTER_UCLS:
         raise SystemExit(f"Master workbook has {len(records)} UCL rows; expected {EXPECTED_MASTER_UCLS}")
-    return header, records
+    return sections, header, records
+
+
+def check_sections(sections: tuple[object, ...]) -> None:
+    for column, label in SECTION_LABELS:
+        actual = str(sections[column] or "").strip()
+        if not actual.startswith(label):
+            raise SystemExit(f"Workbook column {column}: expected table block {label!r}, found {actual!r}")
+        if "counting persons, place of usual residence" not in actual:
+            raise SystemExit(f"Workbook column {column}: table block is not counted by place of usual residence")
 
 
 def check_headers(header: tuple[object, ...]) -> None:
@@ -223,11 +262,11 @@ def verify_against_zenodo(out: pd.DataFrame) -> int:
         )
     else:
         exact = ["population", "state_code", "state_name", "remoteness_code", "remoteness_name"]
-        exact += [f"{s}_{p}" for s in INDICATOR_COLUMNS for p in ("count", "denominator")]
+        exact += [f"{s}_{p}" for s in PUBLISHED_STEMS for p in ("count", "denominator")]
         for col in exact:
             diff = paper[col] != zenodo.loc[paper.index, col]
             problems += [f"{c}.{col}" for c in paper.index[diff]]
-        for stem in INDICATOR_COLUMNS:
+        for stem in PUBLISHED_STEMS:
             col = f"{stem}_pct"
             gap = (paper[col] - zenodo.loc[paper.index, col]).abs().max()
             if not gap <= 1e-9:
@@ -241,8 +280,11 @@ def verify_against_zenodo(out: pd.DataFrame) -> int:
 
 
 def main() -> None:
-    header, master = read_master()
+    sections, header, master = read_master()
+    check_sections(sections)
     check_headers(header)
+    if set(PUBLISHED_STEMS) - set(INDICATOR_COLUMNS):
+        raise SystemExit("PUBLISHED_STEMS lists a stem that INDICATOR_COLUMNS does not extract")
     geo = read_geography()
 
     rows: list[dict[str, object]] = []
@@ -310,6 +352,11 @@ def main() -> None:
         "rules": {
             "specialRecords": "name matches /Remainder|Migratory|No usual address/i (cross-checked against codes x31001/x79997/x99994)",
             "remoteness": "UCL must lie wholly within one 2021 Remoteness Area (ABS SA1 allocation)",
+            "atlasOnlyIndicators": (
+                "cancer = P_Cancer_Tot / Tot_P_P (LTHP, 'Cancer (including remission)'); "
+                "unemployment_rate = Unemployed / Labour force participation (LFSP labour force). "
+                "Not in the published Zenodo dataset, so not part of the reproduction check."
+            ),
         },
         "counts": {
             "masterWorkbookUcls": len(master),

@@ -1,104 +1,213 @@
-import { communityBadgeText, type AtlasData, type Town } from "./data";
+import {
+  communityBadgeText,
+  contextIndicators,
+  healthIndicators,
+  type AtlasData,
+  type Indicator,
+  type Town,
+} from "./data";
 import { formatCount, formatPercent, formatPopulation } from "./format";
 import { renderDistributionStrip } from "./charts";
 
-export function renderTownPanel(root: HTMLElement, data: AtlasData, town: Town): void {
-  root.replaceChildren();
+export interface PanelOptions {
+  /** Health indicator key to show in the Health section. */
+  outcome: string;
+  onOutcomeChange: (key: string) => void;
+}
 
+export function renderTownPanel(root: HTMLElement, data: AtlasData, town: Town, opts: PanelOptions): void {
+  root.replaceChildren();
+  root.appendChild(renderHeader(data, town));
+
+  const outcomes = healthIndicators(data);
+  const selected = outcomes.find((i) => i.key === opts.outcome) ?? outcomes[0];
+  root.appendChild(renderHealthSection(data, town, outcomes, selected, opts.onOutcomeChange));
+  root.appendChild(renderContextSection(data, town));
+  root.appendChild(renderAboutDrawer(data));
+}
+
+function renderHeader(data: AtlasData, town: Town): HTMLElement {
   const header = document.createElement("div");
   header.className = "panel-header";
+  const tagged = data.ten4ten.uclCodes.has(town.ucl_code);
+  const community = data.ten4ten.communityLabels.get(town.ucl_code);
   header.innerHTML = `
-    ${
-      data.ten4ten.uclCodes.has(town.ucl_code)
-        ? `<span class="community-badge">${escapeHtml(communityBadgeText(data.ten4ten, town.ucl_code))}</span>`
-        : ""
-    }
+    ${tagged ? `<span class="community-badge">${escapeHtml(communityBadgeText(data.ten4ten, town.ucl_code))}</span>` : ""}
     <h2>${escapeHtml(town.ucl_name)}</h2>
     <p class="panel-subheader">${escapeHtml(town.state_name)} · ${escapeHtml(town.remoteness_name)}</p>
-    <p class="panel-population">Population ${formatPopulation(town.population)}</p>
+    <p class="panel-population">Population ${formatPopulation(town.population)} usual residents</p>
+    <p class="panel-geo-note">Figures are for the 2021 ABS Urban Centre/Locality (town) boundary${
+      community
+        ? `: the ${escapeHtml(town.ucl_name)} locality only, not the whole of ${escapeHtml(community)}`
+        : ", which can differ from the surrounding Local Government Area or suburb of the same name"
+    }.</p>
   `;
-  root.appendChild(header);
+  return header;
+}
 
-  const healthSection = document.createElement("section");
-  healthSection.className = "panel-section";
-  const diabetes = data.indicators.diabetes_pct;
-  const diabetesValue = Number(town.diabetes_pct);
-  const numerator = Number(town[diabetes.numeratorField]);
-  const denominator = Number(town[diabetes.denominatorField]);
-  healthSection.innerHTML = `
-    <h3>${escapeHtml(diabetes.label)}</h3>
-    <p class="indicator-headline">${formatPercent(diabetesValue, diabetes.precision)}
-      <span class="indicator-denominator">(${formatCount(numerator)} of ${formatCount(denominator)} ${escapeHtml(diabetes.denominatorLabel)})</span>
+function renderHealthSection(
+  data: AtlasData,
+  town: Town,
+  outcomes: Indicator[],
+  selected: Indicator,
+  onOutcomeChange: (key: string) => void,
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "panel-section health-section";
+  section.setAttribute("aria-labelledby", "health-heading");
+
+  const headingRow = document.createElement("div");
+  headingRow.className = "section-heading-row";
+  headingRow.innerHTML = `<h3 id="health-heading">Health</h3><span class="section-source">2021 Census</span>`;
+  section.appendChild(headingRow);
+
+  // Outcome selector: a small segmented control (ARIA tabs) generated from the health indicators.
+  const tabs = document.createElement("div");
+  tabs.className = "outcome-tabs";
+  tabs.setAttribute("role", "tablist");
+  tabs.setAttribute("aria-label", "Health outcome");
+  const buttons: HTMLButtonElement[] = outcomes.map((indicator) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "outcome-tab";
+    button.id = `outcome-tab-${indicator.key}`;
+    button.setAttribute("role", "tab");
+    button.setAttribute("aria-controls", "outcome-panel");
+    const isSelected = indicator.key === selected.key;
+    button.setAttribute("aria-selected", String(isSelected));
+    button.tabIndex = isSelected ? 0 : -1;
+    button.textContent = indicator.shortLabel;
+    button.addEventListener("click", () => {
+      if (indicator.key !== selected.key) onOutcomeChange(indicator.key);
+    });
+    return button;
+  });
+  tabs.addEventListener("keydown", (e) => {
+    const current = buttons.findIndex((b) => b === document.activeElement);
+    if (current < 0) return;
+    let next = current;
+    if (e.key === "ArrowRight") next = (current + 1) % buttons.length;
+    else if (e.key === "ArrowLeft") next = (current - 1 + buttons.length) % buttons.length;
+    else return;
+    e.preventDefault();
+    onOutcomeChange(outcomes[next].key);
+    document.getElementById(buttons[next].id)?.focus();
+  });
+  tabs.append(...buttons);
+  section.appendChild(tabs);
+
+  const panel = document.createElement("div");
+  panel.id = "outcome-panel";
+  panel.className = "outcome-panel";
+  panel.setAttribute("role", "tabpanel");
+  panel.setAttribute("aria-labelledby", `outcome-tab-${selected.key}`);
+
+  const value = Number(town[selected.key]);
+  const numerator = Number(town[selected.numeratorField]);
+  const denominator = Number(town[selected.denominatorField]);
+  panel.innerHTML = `
+    <h4 class="outcome-label">${escapeHtml(selected.label)}</h4>
+    <p class="indicator-headline">${formatPercent(value, selected.precision)}
+      <span class="indicator-denominator">${formatCount(numerator)} of ${formatCount(denominator)} ${escapeHtml(selected.denominatorLabel)}</span>
     </p>
+    <p class="indicator-definition">${escapeHtml(selected.definition)}</p>
   `;
-  root.appendChild(healthSection);
-
-  const nationalGroup = data.towns;
-  const remotenessGroup = data.towns.filter((t) => t.remoteness_name === town.remoteness_name);
 
   const nationalChartEl = document.createElement("div");
   nationalChartEl.className = "chart-strip";
-  healthSection.appendChild(nationalChartEl);
-  renderDistributionStrip(nationalChartEl, {
-    group: nationalGroup,
-    indicator: diabetes,
-    stats: diabetes.nationalStats,
-    selected: town,
-    title: "All tiny towns nationally",
-  });
-
+  panel.appendChild(nationalChartEl);
   const remotenessChartEl = document.createElement("div");
   remotenessChartEl.className = "chart-strip";
-  healthSection.appendChild(remotenessChartEl);
-  renderDistributionStrip(remotenessChartEl, {
-    group: remotenessGroup,
-    indicator: diabetes,
-    stats: diabetes.remotenessStats[town.remoteness_name],
-    selected: town,
-    title: `Same Remoteness Area (${town.remoteness_name})`,
+  panel.appendChild(remotenessChartEl);
+
+  const caveats = document.createElement("ul");
+  caveats.className = "indicator-caveats";
+  caveats.setAttribute("aria-label", "Interpretation notes");
+  for (const caveat of selected.caveats) {
+    const li = document.createElement("li");
+    li.textContent = caveat;
+    caveats.appendChild(li);
+  }
+  panel.appendChild(caveats);
+  section.appendChild(panel);
+
+  // Plot needs the container's laid-out width, so draw after the section is in the document.
+  queueMicrotask(() => {
+    renderDistributionStrip(nationalChartEl, {
+      group: data.towns,
+      indicator: selected,
+      stats: selected.nationalStats,
+      selected: town,
+      title: "All tiny towns nationally",
+    });
+    renderDistributionStrip(remotenessChartEl, {
+      group: data.towns.filter((t) => t.remoteness_name === town.remoteness_name),
+      indicator: selected,
+      stats: selected.remotenessStats[town.remoteness_name],
+      selected: town,
+      title: `Same Remoteness Area (${town.remoteness_name})`,
+    });
   });
 
-  const contextSection = document.createElement("section");
-  contextSection.className = "panel-section";
-  const contextHeading = document.createElement("h3");
-  contextHeading.textContent = "People and context";
-  contextSection.appendChild(contextHeading);
+  return section;
+}
 
-  const contextIndicators = Object.values(data.indicators).filter((i) => i.category === "context");
-  for (const indicator of contextIndicators) {
+function renderContextSection(data: AtlasData, town: Town): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "panel-section";
+  const heading = document.createElement("h3");
+  heading.textContent = "People and context";
+  section.appendChild(heading);
+
+  for (const indicator of contextIndicators(data)) {
     const value = Number(town[indicator.key]);
     const num = Number(town[indicator.numeratorField]);
     const den = Number(town[indicator.denominatorField]);
     const row = document.createElement("div");
     row.className = "context-row";
+    row.dataset.indicator = indicator.key;
     row.innerHTML = `
       <div class="context-row-label">${escapeHtml(indicator.shortLabel)}</div>
       <div class="context-row-value">${formatPercent(value, indicator.precision)}
-        <span class="indicator-denominator">(${formatCount(num)} of ${formatCount(den)} ${escapeHtml(indicator.denominatorLabel)})</span>
+        <span class="indicator-denominator">${formatCount(num)} of ${formatCount(den)} ${escapeHtml(indicator.denominatorLabel)}</span>
       </div>
     `;
-    contextSection.appendChild(row);
+    section.appendChild(row);
   }
-  root.appendChild(contextSection);
+  return section;
+}
 
-  const aboutDrawer = document.createElement("details");
-  aboutDrawer.className = "about-drawer";
+function renderAboutDrawer(data: AtlasData): HTMLElement {
+  const drawer = document.createElement("details");
+  drawer.className = "about-drawer";
   const summary = document.createElement("summary");
-  summary.textContent = "About these data · interpretation notes";
-  aboutDrawer.appendChild(summary);
+  summary.textContent = "About these data · definitions and interpretation notes";
+  drawer.appendChild(summary);
 
-  const aboutBody = document.createElement("div");
-  aboutBody.className = "about-body";
-  const allCaveats = Array.from(
-    new Set(Object.values(data.indicators).flatMap((i) => i.caveats)),
-  );
-  aboutBody.innerHTML = `
-    <ul>${allCaveats.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
+  const body = document.createElement("div");
+  body.className = "about-body";
+  const entries = Object.values(data.indicators)
+    .map(
+      (i) => `
+      <dt>${escapeHtml(i.label)}</dt>
+      <dd>
+        <p>${escapeHtml(i.definition)}</p>
+        <ul>${i.caveats.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
+      </dd>`,
+    )
+    .join("");
+  body.innerHTML = `
+    <p>Comparisons show where a town sits among other tiny towns (median and interquartile range).
+      They are not rankings, scores or targets.</p>
+    <p>All figures are for 2021 ABS Urban Centres and Localities (town boundaries). Census
+      QuickStats or other sources for the Local Government Area, suburb or island of the same name
+      describe a different area and will differ.</p>
+    <dl class="about-indicators">${entries}</dl>
     <p>${escapeHtml(data.manifest.scopeDefinition)}</p>
     <p>Sources: ${data.manifest.sources.map((s) => escapeHtml(`${s.name} (${s.license})`)).join("; ")}.</p>
   `;
-  aboutDrawer.appendChild(aboutBody);
-  root.appendChild(aboutDrawer);
+  drawer.appendChild(body);
+  return drawer;
 }
 
 function escapeHtml(s: string): string {

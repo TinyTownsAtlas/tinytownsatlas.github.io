@@ -43,7 +43,8 @@ export function renderDistributionStrip(
     },
     y: { axis: null },
     marks: [
-      Plot.ruleX([stats.q1, stats.q3], { stroke: "var(--strip-iqr)", strokeWidth: 10, strokeOpacity: 0.35 }),
+      // Interquartile range as a shaded band from Q1 to Q3.
+      Plot.barX([stats], { x1: (d: IndicatorStats) => d.q1, x2: (d: IndicatorStats) => d.q3, fill: "var(--strip-iqr)", fillOpacity: 0.3 }),
       Plot.ruleX([stats.median], { stroke: "var(--strip-median)", strokeWidth: 2 }),
       Plot.dot(group, {
         x: (d: Town) => Number(d[key]),

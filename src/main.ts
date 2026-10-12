@@ -1,14 +1,26 @@
-import { loadAtlasData } from "./data";
+import { healthIndicators, loadAtlasData } from "./data";
 import { buildSearchIndex, search } from "./search";
-import { StateStore, readStateFromUrl } from "./state";
+import { DEFAULT_OUTCOME, StateStore, readStateFromUrl, writeStateToUrl, type AppState } from "./state";
 import { createMap } from "./map";
 import { renderTownPanel } from "./panel";
 import { renderLegend } from "./legend";
+import { getMapLayers, resolveLayer } from "./layers";
 
 async function main(): Promise<void> {
   const data = await loadAtlasData();
   const searchIndex = buildSearchIndex(data.towns, data.ten4ten.uclCodes, data.ten4ten.communityLabels);
-  const store = new StateStore(readStateFromUrl());
+  const mapLayers = getMapLayers(data);
+  const healthKeys = new Set(healthIndicators(data).map((i) => i.key));
+  const defaultOutcome = healthKeys.has(DEFAULT_OUTCOME) ? DEFAULT_OUTCOME : [...healthKeys][0];
+
+  // Unknown or non-map values from the URL (e.g. ?layer=indigenous_pct) fall back to defaults.
+  const normalize = (s: AppState): AppState => ({
+    selectedUclCode: s.selectedUclCode && data.townsByCode.has(s.selectedUclCode) ? s.selectedUclCode : null,
+    layer: resolveLayer(mapLayers, s.layer).key,
+    outcome: healthKeys.has(s.outcome) ? s.outcome : defaultOutcome,
+  });
+  const store = new StateStore(readStateFromUrl(), normalize);
+  writeStateToUrl(store.get(), false); // drop invalid params from the address bar
 
   const panelEl = document.getElementById("panel") as HTMLElement;
   const panelContentEl = document.getElementById("panel-content") as HTMLElement;
@@ -20,44 +32,63 @@ async function main(): Promise<void> {
   const legendEl = document.getElementById("legend") as HTMLElement;
   const mapContainer = document.getElementById("map") as HTMLElement;
 
-  layerSelect.value = store.get().layer;
-  renderLegend(legendEl, data, store.get().layer);
+  layerSelect.replaceChildren(
+    ...mapLayers.map((layer) => {
+      const option = document.createElement("option");
+      option.value = layer.key;
+      option.textContent = layer.optionLabel;
+      return option;
+    }),
+  );
 
-  const atlasMap = createMap(mapContainer, data, (uclCode) => {
+  const initialLayer = resolveLayer(mapLayers, store.get().layer);
+  const atlasMap = createMap(mapContainer, data, initialLayer, (uclCode) => {
     store.selectTown(uclCode);
   });
 
-  function openTown(uclCode: string, flyTo: boolean): void {
-    const town = data.townsByCode.get(uclCode);
-    if (!town) return;
-    renderTownPanel(panelContentEl, data, town);
+  // Development-only handle for browser smoke tests (removed from production builds).
+  if (import.meta.env.DEV) (window as unknown as { __atlas: unknown }).__atlas = { map: atlasMap.map, store };
+
+  // The selector, the map paint and the legend are always updated together from one MapLayer.
+  function applyLayer(key: string): void {
+    const layer = resolveLayer(mapLayers, key);
+    if (layerSelect.value !== layer.key) layerSelect.value = layer.key;
+    atlasMap.setLayer(layer);
+    renderLegend(legendEl, layer);
+  }
+
+  function showPanel(state: AppState): void {
+    const town = state.selectedUclCode ? data.townsByCode.get(state.selectedUclCode) : undefined;
+    if (!town) {
+      panelEl.hidden = true;
+      document.body.classList.remove("panel-open", "panel-expanded");
+      atlasMap.setSelected(null);
+      return;
+    }
+    renderTownPanel(panelContentEl, data, town, {
+      outcome: state.outcome,
+      onOutcomeChange: (key) => store.setOutcome(key),
+    });
     panelEl.hidden = false;
     document.body.classList.add("panel-open");
-    atlasMap.setSelected(uclCode);
-    if (flyTo) atlasMap.flyToTown(town.lon, town.lat);
+    atlasMap.setSelected(town.ucl_code);
   }
 
-  function closeTown(): void {
-    panelEl.hidden = true;
-    document.body.classList.remove("panel-open");
-    atlasMap.setSelected(null);
-    store.selectTown(null, { pushHistory: false });
-  }
+  applyLayer(initialLayer.key);
 
+  let shownTown: string | null = null;
   store.subscribe((state) => {
-    if (state.selectedUclCode) {
-      openTown(state.selectedUclCode, true);
-    } else {
-      panelEl.hidden = true;
-      document.body.classList.remove("panel-open");
-      atlasMap.setSelected(null);
+    applyLayer(state.layer);
+    showPanel(state);
+    // Fly only when the selected town changes, not on every layer/outcome change.
+    if (state.selectedUclCode && state.selectedUclCode !== shownTown) {
+      const town = data.townsByCode.get(state.selectedUclCode)!;
+      atlasMap.flyToTown(town.lon, town.lat);
     }
-    if (state.layer !== layerSelect.value) layerSelect.value = state.layer;
-    atlasMap.setLayer(state.layer);
-    renderLegend(legendEl, data, state.layer);
+    shownTown = state.selectedUclCode;
   });
 
-  panelCloseEl.addEventListener("click", closeTown);
+  panelCloseEl.addEventListener("click", () => store.selectTown(null, { pushHistory: false }));
 
   // Mobile bottom-sheet: tap the handle to toggle peek/expanded.
   panelHandleEl.addEventListener("click", () => {
@@ -65,7 +96,7 @@ async function main(): Promise<void> {
   });
 
   layerSelect.addEventListener("change", () => {
-    store.setLayer(layerSelect.value);
+    store.setLayer(layerSelect.value, { healthKeys });
   });
 
   let activeResultIndex = -1;
@@ -75,6 +106,7 @@ async function main(): Promise<void> {
     activeResultIndex = -1;
     if (results.length === 0) {
       searchResultsEl.hidden = true;
+      searchInput.setAttribute("aria-expanded", "false");
       return;
     }
     for (const town of results) {
@@ -91,10 +123,12 @@ async function main(): Promise<void> {
         store.selectTown(town.ucl_code);
         searchInput.value = town.ucl_name;
         searchResultsEl.hidden = true;
+        searchInput.setAttribute("aria-expanded", "false");
       });
       searchResultsEl.appendChild(li);
     }
     searchResultsEl.hidden = false;
+    searchInput.setAttribute("aria-expanded", "true");
   }
 
   searchInput.addEventListener("input", () => renderResults(searchInput.value));
@@ -111,7 +145,7 @@ async function main(): Promise<void> {
       e.preventDefault();
       activeResultIndex = Math.max(activeResultIndex - 1, 0);
     } else if (e.key === "Enter") {
-      if (activeResultIndex >= 0) items[activeResultIndex].click();
+      items[Math.max(activeResultIndex, 0)].click();
       return;
     } else if (e.key === "Escape") {
       searchResultsEl.hidden = true;
@@ -129,16 +163,13 @@ async function main(): Promise<void> {
 
   const initial = store.get();
   if (initial.selectedUclCode) {
-    const town = data.townsByCode.get(initial.selectedUclCode);
-    if (town) {
-      renderTownPanel(panelContentEl, data, town);
-      panelEl.hidden = false;
-      document.body.classList.add("panel-open");
-      atlasMap.map.once("load", () => {
-        atlasMap.map.jumpTo({ center: [town.lon, town.lat], zoom: 8 });
-        atlasMap.setSelected(town.ucl_code);
-      });
-    }
+    const town = data.townsByCode.get(initial.selectedUclCode)!;
+    showPanel(initial);
+    shownTown = town.ucl_code;
+    atlasMap.map.once("load", () => {
+      atlasMap.map.jumpTo({ center: [town.lon, town.lat], zoom: 8 });
+      atlasMap.setSelected(town.ucl_code);
+    });
   }
 }
 

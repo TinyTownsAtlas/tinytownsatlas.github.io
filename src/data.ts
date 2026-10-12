@@ -32,10 +32,14 @@ export interface Indicator {
   denominatorLabel: string;
   category: "health" | "context";
   isDefaultMapLayer: boolean;
+  /** Opt-in map colour layer (health indicators only; enforced by the build and validator). */
+  mapLayer: boolean;
   isRankable: false;
   colorScale: "sequential";
   domain: [number, number];
   description: string;
+  /** One-sentence definition shown next to the value, including what the denominator is. */
+  definition: string;
   caveats: string[];
   source: string;
   nationalStats: IndicatorStats;
@@ -71,6 +75,14 @@ export interface CommunityTag {
 export function communityBadgeText(tag: CommunityTag, uclCode: string): string {
   const community = tag.communityLabels.get(uclCode);
   return community ? `${tag.label} · ${community}` : tag.label;
+}
+
+export function healthIndicators(data: Pick<AtlasData, "indicators">): Indicator[] {
+  return Object.values(data.indicators).filter((i) => i.category === "health");
+}
+
+export function contextIndicators(data: Pick<AtlasData, "indicators">): Indicator[] {
+  return Object.values(data.indicators).filter((i) => i.category === "context");
 }
 
 export interface AtlasData {
