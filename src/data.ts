@@ -77,6 +77,33 @@ export function communityBadgeText(tag: CommunityTag, uclCode: string): string {
   return community ? `${tag.label} · ${community}` : tag.label;
 }
 
+/**
+ * PHIDU hospital-services context (public/data/hospital_context.json): Population Health Area
+ * estimates assigned to towns. Separate licence (CC BY-NC-SA 3.0 AU); never a distribution or map
+ * layer, and no allocated counts.
+ */
+export type HospitalStatus = "available" | "suppressed" | "not_available" | "not_interpretable";
+
+export interface HospitalContext {
+  title: string;
+  licence: { name: string; url: string; attribution: string; attributionPolicyUrl: string; notice: string };
+  source: string;
+  measure: string;
+  indicators: Record<string, { label: string; period: string; definition: string }>;
+  caveats: string[];
+  statusText: Record<Exclude<HospitalStatus, "available">, string>;
+  towns: Record<
+    string,
+    {
+      phaCode: string | null;
+      phaName: string | null;
+      /** UCLs (any size) in the PHIDU workbook with identical values, including this one. */
+      sharedUclCount: number;
+      values: Record<string, { status: HospitalStatus; sr: number | null }>;
+    }
+  >;
+}
+
 export function healthIndicators(data: Pick<AtlasData, "indicators">): Indicator[] {
   return Object.values(data.indicators).filter((i) => i.category === "health");
 }
@@ -92,12 +119,13 @@ export interface AtlasData {
   manifest: Manifest;
   pointsGeoJSON: GeoJSON.FeatureCollection;
   ten4ten: CommunityTag;
+  hospital: HospitalContext;
 }
 
 const base = import.meta.env.BASE_URL;
 
 export async function loadAtlasData(): Promise<AtlasData> {
-  const [towns, indicators, manifest, pointsGeoJSON, ten4ten] = await Promise.all([
+  const [towns, indicators, manifest, pointsGeoJSON, ten4ten, hospital] = await Promise.all([
     fetch(`${base}data/towns.json`).then((r) => r.json() as Promise<Town[]>),
     fetch(`${base}data/indicators.json`).then((r) => r.json() as Promise<Record<string, Indicator>>),
     fetch(`${base}data/manifest.json`).then((r) => r.json() as Promise<Manifest>),
@@ -106,6 +134,7 @@ export async function loadAtlasData(): Promise<AtlasData> {
       (r) =>
         r.json() as Promise<{ label: string; uclCodes: string[]; communityLabels?: Record<string, string> }>,
     ),
+    fetch(`${base}data/hospital_context.json`).then((r) => r.json() as Promise<HospitalContext>),
   ]);
 
   const townsByCode = new Map(towns.map((t) => [t.ucl_code, t]));
@@ -121,5 +150,6 @@ export async function loadAtlasData(): Promise<AtlasData> {
       uclCodes: new Set(ten4ten.uclCodes),
       communityLabels: new Map(Object.entries(ten4ten.communityLabels ?? {})),
     },
+    hospital,
   };
 }

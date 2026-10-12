@@ -90,24 +90,73 @@ Brewarrina (L) UCL. Brewarrina suburb/locality (SAL10560) is different again (25
 "In the labour force (of all residents)". It is not the conventional participation rate, which
 uses people aged 15+ (44.3% for Brewarrina in QuickStats versus 34.2% here).
 
-### Hospitalisation and ED estimates (PHIDU) — not displayed
+### Hospital services: broader-area context (PHIDU, PHA-derived)
 
-`05_source_archive/PHIDU_John_Glover/prior_validated_sources/Hospital_data_workbook.xlsx` holds
-PHIDU estimates by UCL: public hospital admissions (total; mental health, circulatory,
-respiratory, chronic kidney disease, injury), potentially preventable hospitalisations (all, acute,
-chronic, vaccine-preventable and selected conditions, 2020/21) and ED presentations (by triage and
-condition), each as an allocated number, an indirectly age-standardised rate per 100,000 and a
-standardised ratio. PHIDU's notes (`data_sources_notes-final.docx`) state these were produced from
-Population Health Area (PHA) data by applying each UCL's share of the PHA population, so many UCLs
-take the same value from one PHA. In the Atlas's 1,208 primary towns, 1,163 are in PHA-split
-groups (the `PHA_CODE_2021` flag in the master workbook), and the 1,208 towns have only 519
-distinct total-admissions SR values. PHIDU also cautions that where a UCL has a larger share of
-Aboriginal and Torres Strait Islander residents than its PHA, the allocated estimate needs extra
-care. This is relevant to towns such as Brewarrina (54% of usual residents; estimate allocated from
-the "Bourke - Brewarrina/ Walgett - Lightning Ridge" PHA) and Laura (Qld) (75%; "Far North (Qld)"
-PHA). The data are licensed CC BY-NC-SA 3.0 AU, unlike the
-CC BY 4.0 Census data. They are therefore not shown as town values, not used as map layers, and
-not summarised as town distributions. See the October 2026 handoff for the open decisions.
+Shown in each town profile under "Hospital services: broader-area context", from
+`public/data/hospital_context.json`. Not a town measure: no town distributions, no map layer, no
+entry in `indicators.json`, and no allocated admission counts.
+
+**Source.** `05_source_archive/PHIDU_John_Glover/prior_validated_sources/Hospital_data_workbook.xlsx`
+(sha256 checked against `diabetology_source_manifest.csv`), sheet `Data`, with definitions in
+`data_sources_notes-final.docx` and PHA flags (`PHA_CODE_2021`, `PHA_NAME`, block "UCL Flag -
+Hospital and Mortality data") from the September 2026 master workbook.
+`scripts/build_phidu_context.py` checks every header label and writes
+`06_derived_data/phidu_context/atlas_hospital_context.csv` plus a provenance file.
+
+| Atlas key | Workbook block / measure | Columns | Period |
+|---|---|---|---|
+| `public_admissions` | "Hospital admissions - Public hospitals" / "Total admissions" (excludes same-day renal dialysis) | 2-4 (Number, Rate, SR) | 2022/23 |
+| `pph` | "Potentially preventable hospitalisations (PPH) - Public hospitals" / "PPH admissions for all conditions" | 21-23 | 2020/21 (2022/23 not yet available from PHIDU) |
+
+Only the SR (indirectly age-standardised ratio, Australia = 100) is published. The workbook's
+`Total` row has SR = 100 for both, and the build checks this.
+
+**Geography.** PHIDU applied each UCL's share of its Population Health Area's population to the
+PHA's observed and expected admissions and recalculated the ratio, so every UCL drawn from one PHA
+carries the same SR (the build fails otherwise; observed spread is below 1e-12). The master
+workbook's PHA flag lists the 1,568 UCLs that PHIDU split from a PHA (UCLs with under 50% of the
+PHA's population); this set matches the hospital workbook's `UCL_aggregations` sheet exactly (build
+check). 1,163 of the 1,208 Atlas towns are in that set. For the other 45 (including Currie),
+PHIDU did not supply a PHA code or name, and the files do not establish which PHA or boundary was
+used (PHIDU's notes say only which UCLs are in the split list). The panel says the area was not
+identified and does not name or describe one. The flag covers only UCLs with under 50% of their
+PHA: each PHA's main UCL (usually a larger town outside the Atlas scope, e.g. Broken Hill for the
+Wilcannia/Ivanhoe/Menindee PHA) is unflagged but carries identical ratios. The panel therefore
+counts sharing from the values themselves: UCLs in the workbook with an identical public-admissions
+ratio (exact to about 1e-12; the build checks that their PPH ratios also agree where published and
+that every flagged PHA group falls in one such set). It names the PHA when the flag gives one and
+states how many other UCLs show the same values; for the 45 unflagged Atlas towns, none share
+values with another UCL.
+
+**Missing values.** Workbook symbols are kept as statuses, never as zeros: `#` (number not shown:
+population under 100 or fewer than 6 admissions) with `..` for the rate and ratio ->
+`suppressed` (160 Atlas towns for PPH, none for admissions); `n.a.` -> `not_available` (the four
+Other Territories towns). Uriarra Village (L), ACT, is `not_interpretable` for both: every one of
+its 84 numeric cells in the workbook (all admissions, PPH and ED measures) is 0, the same pattern
+as the two no-resident "Migratory - Offshore - Shipping" records (UCL179997, UCL879997) and no other
+UCL. That reads as no data assigned rather than observed zero admissions, but the source does not
+say which, so the value is withheld with that explanation. Any other zero ratio stops the build.
+
+**Comparability.** PHIDU notes that hospital scope differs between states and territories and that
+results are not always comparable between jurisdictions; data by hospital type were not supplied
+for Qld, Tas, NT or ACT. These are public-hospital admissions only, by place of residence, with
+transfers and repeat admissions counted separately. PHIDU advises extra care where a UCL has a
+larger share of Aboriginal and Torres Strait Islander residents than its PHA. Brewarrina (54%;
+"Bourke - Brewarrina/ Walgett - Lightning Ridge" PHA) and Laura (Qld) (75%; "Far North (Qld)" PHA)
+are examples. These caveats are shown in the section itself.
+
+**Licence.** PHIDU content is licensed CC BY-NC-SA 3.0 AU (stated in the delivered notes, with
+PHIDU's licensing and attribution policy link). `hospital_context.json` is a separately
+identifiable derived dataset under that licence and carries its own licence block (attribution to
+PHIDU, licence URL, list of changes). The Atlas's Census data (CC BY 4.0) and site code (MIT) are
+not relicensed. The archived delivery email and the PHIDU correspondence in the project mailbox
+(searched October 2026) set no further publication conditions for the hospital estimates; John
+Glover asked that attribution be to PHIDU. The separate permission question in that
+correspondence concerned SA2 mortality data, which the Atlas does not use.
+
+`validate.py` checks the licence block, that the town set equals the primary towns, that entries
+carry only a status and SR (no counts), that towns from one PHA share one SR, and source values for
+Brewarrina, Laura and Currie.
 
 Each `*_pct` field's denominator is **not always total population** (e.g. `low_income_denominator`
 is households; `crowded_denominator`/`social_housing_denominator` are enumerated population, not

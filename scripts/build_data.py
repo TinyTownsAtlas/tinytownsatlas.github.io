@@ -16,11 +16,20 @@ from pathlib import Path
 
 import pandas as pd
 
-from indicator_defs import DEFAULT_MAP_LAYER, INDICATORS
+from indicator_defs import (
+    DEFAULT_MAP_LAYER,
+    HOSPITAL_CONTEXT,
+    HOSPITAL_CONTEXT_CAVEATS,
+    HOSPITAL_CONTEXT_STATUS_TEXT,
+    INDICATORS,
+    PHIDU_ATTRIBUTION,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 ANALYTIC_CSV = ROOT / "06_derived_data" / "census" / "atlas_ucl_dataset.csv"
 PROVENANCE_JSON = ROOT / "06_derived_data" / "census" / "atlas_ucl_dataset_provenance.json"
+HOSPITAL_CSV = ROOT / "06_derived_data" / "phidu_context" / "atlas_hospital_context.csv"
+HOSPITAL_PROVENANCE_JSON = ROOT / "06_derived_data" / "phidu_context" / "atlas_hospital_context_provenance.json"
 GEOJSON_POINTS = ROOT / "04_site" / "public" / "data" / "towns.geojson"
 # Display-only community tags. Editing this file (and re-running this script) is all that is
 # needed to tag another town; tags never affect scope, comparators or statistics.
@@ -197,6 +206,66 @@ def main() -> None:
     }
     (DATA_DIR / "ten4ten.json").write_text(json.dumps(ten4ten_out, indent=2), encoding="utf-8")
 
+    # --- hospital_context.json: PHIDU PHA-derived estimates, primary towns only ---
+    # A separately identifiable derived dataset under PHIDU's CC BY-NC-SA 3.0 AU licence. No
+    # allocated counts, no town distributions, no map layer (see indicator_defs.HOSPITAL_CONTEXT).
+    hospital = pd.read_csv(HOSPITAL_CSV, dtype={"ucl_code": str, "pha_code": str}, keep_default_na=False)
+    hospital = hospital.set_index("ucl_code")
+    missing_hospital = set(primary["ucl_code"]) - set(hospital.index)
+    if missing_hospital:
+        raise SystemExit(f"{len(missing_hospital)} primary town(s) missing from {HOSPITAL_CSV.name}")
+    hospital_towns = {}
+    for code in primary["ucl_code"]:
+        h = hospital.loc[code]
+        values = {}
+        for key in HOSPITAL_CONTEXT:
+            status = h[f"{key}_status"]
+            sr = round(float(h[f"{key}_sr"]), PRECISION) if status == "available" else None
+            values[key] = {"status": status, "sr": sr}
+        hospital_towns[code] = {
+            "phaCode": h["pha_code"] or None,
+            "phaName": h["pha_name"] or None,
+            "sharedUclCount": int(h["shared_ucl_count"]),
+            "values": values,
+        }
+    hospital_provenance = json.loads(HOSPITAL_PROVENANCE_JSON.read_text(encoding="utf-8"))
+    hospital_out = {
+        "title": "Tiny Towns Atlas hospital-services context (derived from PHIDU UCL estimates)",
+        "licence": {
+            "name": "CC BY-NC-SA 3.0 AU",
+            "url": "https://creativecommons.org/licenses/by-nc-sa/3.0/au/",
+            "attribution": PHIDU_ATTRIBUTION,
+            "attributionPolicyUrl": (
+                "https://phidu.torrens.edu.au/help-and-information/copyright-disclaimer/"
+                "licensing-and-attribution-of-phidu-content"
+            ),
+            "notice": (
+                "Derived from estimates prepared by PHIDU, Torrens University Australia, for the "
+                "Tiny Towns Atlas, licensed under CC BY-NC-SA 3.0 AU. Changes: two indicators "
+                "selected, standardised ratios rounded to one decimal place, allocated admission "
+                "counts omitted, and one zero value withheld. This file is licensed under CC "
+                "BY-NC-SA 3.0 AU. It is separate from the Atlas's CC BY 4.0 Census data and MIT "
+                "site code, which are not covered by this licence."
+            ),
+        },
+        "source": (
+            "PHIDU estimates by UCL from Population Health Area data; hospital data from the "
+            "Australian Institute of Health and Welfare, supplied on behalf of State and Territory "
+            "health departments; ABS estimated resident population."
+        ),
+        "sourceSha256": next(
+            s["sha256"] for s in hospital_provenance["sources"] if s["path"].endswith("Hospital_data_workbook.xlsx")
+        ),
+        "measure": "Indirectly age-standardised ratio (Australia = 100)",
+        "indicators": HOSPITAL_CONTEXT,
+        "caveats": HOSPITAL_CONTEXT_CAVEATS,
+        "statusText": HOSPITAL_CONTEXT_STATUS_TEXT,
+        "towns": hospital_towns,
+    }
+    (DATA_DIR / "hospital_context.json").write_text(
+        json.dumps(hospital_out, separators=(",", ":")), encoding="utf-8"
+    )
+
     # --- manifest.json ---
     manifest = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -221,6 +290,13 @@ def main() -> None:
                 "attribution": "Australian Bureau of Statistics",
                 "matchedCount": int(len(df)),
             },
+            {
+                "name": "PHIDU hospital estimates by UCL (Population Health Area-derived), hospital_context.json only",
+                "license": "CC BY-NC-SA 3.0 AU",
+                "attribution": PHIDU_ATTRIBUTION,
+                "rowCount": int(len(hospital_towns)),
+                "sha256": hospital_out["sourceSha256"],
+            },
         ],
         "scopeDefinition": (
             f"Primary display universe: UCLs with {PRIMARY_MIN_POP}-{PRIMARY_MAX_POP:,} usual residents, "
@@ -241,6 +317,7 @@ def main() -> None:
     print(f"towns_full.json: {len(towns_full)} rows")
     print(f"indicators.json: {len(indicators_out)} indicators")
     print(f"ten4ten.json: {len(ten4ten_out['uclCodes'])} tagged town(s)")
+    print(f"hospital_context.json: {len(hospital_towns)} towns")
     print("manifest.json written")
 
 

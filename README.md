@@ -9,9 +9,11 @@ how it's built.
 
 Health outcomes (opt-in map layers and the town panel's Health section): Census-reported diabetes
 and Census-reported cancer (including remission). Both are 2021 Census long-term conditions, not
-clinical or registry measures, and not age-standardised. PHIDU hospitalisation estimates are not
-shown because they are allocated from Population Health Areas rather than observed for each town
-(see `DATA_CONTRACT.md`). Unemployment is shown as the conventional Census rate (unemployed /
+clinical or registry measures, and not age-standardised. Each town profile also has a separate
+"Hospital services: broader-area context" section with PHIDU standardised ratios for public
+hospital admissions (2022/23) and potentially preventable hospitalisations (2020/21). These are
+Population Health Area estimates, not town observations, so they have no distributions or map
+layer (see `DATA_CONTRACT.md`). Unemployment is shown as the conventional Census rate (unemployed /
 labour force), which matches ABS QuickStats for the same UCL.
 
 The 100-resident lower bound is a Tiny Towns Atlas product definition, not an ABS definition of a
@@ -43,6 +45,7 @@ frontend never runs Python. To regenerate them after a source data change:
 ```bash
 python -m pip install geopandas shapely pyogrio pandas openpyxl
 python scripts/build_analytic.py   # PHIDU master workbook + ABS SA1 files -> 06_derived_data/census/atlas_ucl_dataset.csv
+python scripts/build_phidu_context.py  # PHIDU hospital workbook + PHA flags -> 06_derived_data/phidu_context/
 python scripts/build_geometry.py   # needs the ABS UCL 2021 GDA2020 shapefile, see the script's docstring
 python scripts/build_data.py
 python scripts/validate.py         # QA checks; exits non-zero on failure
@@ -71,6 +74,10 @@ picker and legend are generated from `indicators.json`; no frontend changes are 
   [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) and
   `ARCHITECTURE.md`'s "Map strategy" section. Replace with a production-suitable tile provider
   before the site sees substantial public traffic.
+- Hospital services context (`public/data/hospital_context.json` only): derived from estimates by
+  the Public Health Information Development Unit (PHIDU), Torrens University Australia, licensed
+  [CC BY-NC-SA 3.0 AU](https://creativecommons.org/licenses/by-nc-sa/3.0/au/). This licence
+  applies to that file, not to the rest of the Atlas.
 - Site code: [MIT License](LICENSE). Does not cover the CC BY 4.0-licensed data/geometry above.
 
 Full provenance detail is in `data/manifest.yml` and `public/data/manifest.json` (generated).

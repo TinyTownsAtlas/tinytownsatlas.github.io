@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, formatPercent, formatPopulation } from "./format";
+import { describeStandardisedRatio, formatCount, formatPercent, formatPopulation } from "./format";
 
 describe("format", () => {
   it("formats percent to one decimal by default", () => {
@@ -16,5 +16,11 @@ describe("format", () => {
 
   it("formats counts rounded to whole numbers with separators", () => {
     expect(formatCount(1234.6)).toBe("1,235");
+  });
+
+  it("describes a standardised ratio against Australia = 100", () => {
+    expect(describeStandardisedRatio(156.6)).toBe("about 1.6 times the Australian rate, allowing for age");
+    expect(describeStandardisedRatio(83.8)).toBe("about 0.8 times the Australian rate, allowing for age");
+    expect(describeStandardisedRatio(102.9)).toBe("about the same as the Australian rate, allowing for age");
   });
 });

@@ -24,6 +24,13 @@ sources:
     matched_count: 1803
     total_features: 1837
 
+  - name: PHIDU hospital estimates by UCL (Population Health Area-derived), hospital_context.json only
+    license: CC BY-NC-SA 3.0 AU (https://creativecommons.org/licenses/by-nc-sa/3.0/au/)
+    attribution: "Public Health Information Development Unit (PHIDU), Torrens University Australia"
+    path: 05_source_archive/PHIDU_John_Glover/prior_validated_sources/Hospital_data_workbook.xlsx
+    derived: 06_derived_data/phidu_context/atlas_hospital_context.csv (scripts/build_phidu_context.py)
+    indicators: public hospital admissions SR 2022/23; potentially preventable hospitalisations SR 2020/21
+
 scope_definition: >
   Primary display universe: UCLs with 100-1,499 usual residents, excluding special/non-settlement
   records. This is a Tiny Towns Atlas product definition, not an official ABS definition of a town.
@@ -40,7 +47,7 @@ indicators_added_2026_10:
 excluded_from_v0_1:
   - Brewarrina/Ten4Ten participant screening data
   - confidential Ten4Ten community reports
-  - custom PHIDU hospitalisation/ED/PPH/mortality workbooks (PHA-allocated estimates, CC BY-NC-SA 3.0 AU; still excluded, see DATA_CONTRACT.md)
+  - PHIDU mortality, ED and condition-specific hospital estimates (only the two hospital ratios above are used)
   - older Small Towns empirical estimates
   - the old composite chronic-burden index
   - historical panel data not delivered/verified

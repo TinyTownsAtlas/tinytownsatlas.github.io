@@ -6,7 +6,7 @@ import {
   type Indicator,
   type Town,
 } from "./data";
-import { formatCount, formatPercent, formatPopulation } from "./format";
+import { describeStandardisedRatio, formatCount, formatPercent, formatPopulation } from "./format";
 import { renderDistributionStrip } from "./charts";
 
 export interface PanelOptions {
@@ -23,6 +23,7 @@ export function renderTownPanel(root: HTMLElement, data: AtlasData, town: Town, 
   const selected = outcomes.find((i) => i.key === opts.outcome) ?? outcomes[0];
   root.appendChild(renderHealthSection(data, town, outcomes, selected, opts.onOutcomeChange));
   root.appendChild(renderContextSection(data, town));
+  root.appendChild(renderHospitalSection(data, town));
   root.appendChild(renderAboutDrawer(data));
 }
 
@@ -177,6 +178,67 @@ function renderContextSection(data: AtlasData, town: Town): HTMLElement {
   return section;
 }
 
+/**
+ * PHIDU hospital estimates for the wider Population Health Area. Shown as area context with the
+ * geography stated first; no town distributions, no map layer, no allocated counts.
+ */
+function renderHospitalSection(data: AtlasData, town: Town): HTMLElement {
+  const hospital = data.hospital;
+  const entry = hospital.towns[town.ucl_code];
+  const section = document.createElement("section");
+  section.className = "panel-section hospital-section";
+  section.setAttribute("aria-labelledby", "hospital-heading");
+
+  const others = entry.sharedUclCount - 1;
+  const anyPublished = Object.values(entry.values).some((v) => v.status === "available");
+  const sharing = !anyPublished
+    ? ""
+    : others > 0
+      ? ` ${others} other ${others === 1 ? "town or locality" : "towns and localities"} in the PHIDU data show the same values.`
+      : " No other town in the PHIDU data has the same values.";
+  const areaNote = entry.phaName
+    ? `Not measured for ${escapeHtml(town.ucl_name)}. These are PHIDU estimates for the
+       <strong>${escapeHtml(entry.phaName)}</strong> Population Health Area, assigned to towns in
+       proportion to population.${sharing}`
+    : `Not measured for ${escapeHtml(town.ucl_name)}. PHIDU produced these estimates from
+       Population Health Area data but did not identify the area for this town, so its name and
+       boundary are not shown.${sharing}`;
+
+  const rows = Object.entries(hospital.indicators)
+    .map(([key, meta]) => {
+      const value = entry.values[key];
+      const valueHtml =
+        value.status === "available" && value.sr !== null
+          ? `<span class="hospital-sr">${Math.round(value.sr)}</span>
+             <span class="hospital-benchmark">Australia = 100</span>
+             <span class="indicator-denominator">${escapeHtml(describeStandardisedRatio(value.sr))}</span>`
+          : `<span class="hospital-missing">${escapeHtml(hospital.statusText[value.status as keyof typeof hospital.statusText])}</span>`;
+      return `
+        <div class="hospital-row" data-hospital="${escapeHtml(key)}">
+          <div class="hospital-row-label">${escapeHtml(meta.label)}<span class="hospital-period">${escapeHtml(meta.period)}</span></div>
+          <div class="hospital-row-value">${valueHtml}</div>
+        </div>
+        <p class="indicator-definition">${escapeHtml(meta.definition)}</p>`;
+    })
+    .join("");
+
+  section.innerHTML = `
+    <div class="section-heading-row">
+      <h3 id="hospital-heading">Hospital services: broader-area context</h3>
+    </div>
+    <p class="hospital-area-note">${areaNote}</p>
+    ${rows}
+    <ul class="indicator-caveats" aria-label="Interpretation notes">${hospital.caveats
+      .map((c) => `<li>${escapeHtml(c)}</li>`)
+      .join("")}</ul>
+    <p class="hospital-licence">Source: ${escapeHtml(hospital.licence.attribution)}. Hospital data from
+      the Australian Institute of Health and Welfare on behalf of state and territory health
+      departments. This extract is licensed
+      <a href="${escapeHtml(hospital.licence.url)}" target="_blank" rel="noopener">${escapeHtml(hospital.licence.name)}</a>.</p>
+  `;
+  return section;
+}
+
 function renderAboutDrawer(data: AtlasData): HTMLElement {
   const drawer = document.createElement("details");
   drawer.className = "about-drawer";
@@ -203,6 +265,8 @@ function renderAboutDrawer(data: AtlasData): HTMLElement {
       QuickStats or other sources for the Local Government Area, suburb or island of the same name
       describe a different area and will differ.</p>
     <dl class="about-indicators">${entries}</dl>
+    <p>Hospital services context: ${escapeHtml(data.hospital.licence.notice)}
+      <a href="${escapeHtml(data.hospital.licence.attributionPolicyUrl)}" target="_blank" rel="noopener">PHIDU licensing and attribution</a>.</p>
     <p>${escapeHtml(data.manifest.scopeDefinition)}</p>
     <p>Sources: ${data.manifest.sources.map((s) => escapeHtml(`${s.name} (${s.license})`)).join("; ")}.</p>
   `;

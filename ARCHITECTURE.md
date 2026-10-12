@@ -29,7 +29,9 @@ Static, client-only site. No backend, no database, no runtime Python.
   scripts/                  Python build-time scripts (not shipped to the browser)
     fetch_geometry.py       (manual/documented step: uses already-downloaded ABS shapefile)
     build_analytic.py       PHIDU master workbook + ABS SA1 files -> 06_derived_data/census/atlas_ucl_dataset.csv
-    build_data.py           Atlas dataset -> public/data/towns.json, towns_full.json, indicators.json
+    build_phidu_context.py  PHIDU hospital workbook + PHA flags -> 06_derived_data/phidu_context/
+    build_data.py           Atlas dataset -> public/data/towns.json, towns_full.json, indicators.json,
+                            hospital_context.json
     build_geometry.py       ABS shapefile -> public/data/towns.geojson (filtered, simplified, joined)
     validate.py             QA checks (Phase-3 "QA" section of the build prompt)
   data/
@@ -74,9 +76,10 @@ the brief explicitly asks to avoid React unless concretely needed.
   reloaded or shared diabetes link showed a diabetes legend over remoteness-coloured dots.)
   `layers.test.ts` checks the expression and legend colours match and that no other module
   hard-codes the palette.
-- PHIDU hospitalisation estimates are not a map layer: they are Population Health Area values
-  allocated to UCLs, so neighbouring towns share one value and a town-level dot colour would
-  misrepresent them. See DATA_CONTRACT.md.
+- PHIDU hospital estimates are not a map layer: they are Population Health Area values allocated to
+  UCLs, so neighbouring towns share one value and a town-level dot colour would misrepresent them.
+  They appear only in the town panel's "Hospital services: broader-area context" section, from
+  their own file (`hospital_context.json`, CC BY-NC-SA 3.0 AU). See DATA_CONTRACT.md.
 - Click on a circle (or a search result) selects a town: opens the panel, flies the map to it,
   updates URL state. Hover shows a lightweight tooltip (name, state) — no numbers in the hover
   tooltip, to avoid inviting comparison-by-hover.

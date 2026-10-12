@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-12T21:16:24+00:00",
+  "generatedAt": "2026-10-12T22:49:32+00:00",
   "sources": [
     {
       "name": "ABS 2021 Census of Population and Housing (TableBuilder), UCL extract supplied by PHIDU",
@@ -20,6 +20,13 @@
       "license": "CC BY 4.0",
       "attribution": "Australian Bureau of Statistics",
       "matchedCount": 1803
+    },
+    {
+      "name": "PHIDU hospital estimates by UCL (Population Health Area-derived), hospital_context.json only",
+      "license": "CC BY-NC-SA 3.0 AU",
+      "attribution": "Public Health Information Development Unit (PHIDU), Torrens University Australia",
+      "rowCount": 1208,
+      "sha256": "6dfcf979d400641b3c88ff2a33d51fb7a5d05326f96df7b19c100b51651a2473"
     }
   ],
   "scopeDefinition": "Primary display universe: UCLs with 100-1,499 usual residents, excluding special/non-settlement records. This is a Tiny Towns Atlas product definition, not an ABS definition of a town. The published diabetes analysis this Atlas builds on used a lower bound of 200 residents.",

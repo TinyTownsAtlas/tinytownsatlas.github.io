@@ -216,5 +216,50 @@ INDICATORS = {
     },
 }
 
+# PHIDU hospital-services context (scripts/build_phidu_context.py). Deliberately not in INDICATORS:
+# these are Population Health Area estimates allocated to towns, so they get no town distributions,
+# no map layer and no entry in indicators.json. Shown only in the town panel's "Hospital services:
+# broader-area context" section, from public/data/hospital_context.json.
+PHIDU_ATTRIBUTION = "Public Health Information Development Unit (PHIDU), Torrens University Australia"
+HOSPITAL_CONTEXT = {
+    "public_admissions": {
+        "label": "Public hospital admissions",
+        "period": "2022/23",
+        "definition": (
+            "All admissions to public hospitals of residents of the area, excluding same-day "
+            "admissions for renal dialysis. Repeat admissions and transfers count separately."
+        ),
+    },
+    "pph": {
+        "label": "Potentially preventable hospitalisations",
+        "period": "2020/21",
+        "definition": (
+            "Public hospital admissions for conditions where earlier primary or community care "
+            "might have prevented the admission (vaccine-preventable, acute and chronic "
+            "conditions; National Healthcare Agreement PI 18)."
+        ),
+    },
+}
+HOSPITAL_CONTEXT_CAVEATS = [
+    "Estimates for the wider Population Health Area, assigned to towns by PHIDU in proportion to "
+    "population. They are not hospital records for this town.",
+    "Standardised ratios compare the area with Australia (= 100) after allowing for age "
+    "(indirect standardisation). They give a guide to whether the area's rate is, for example, "
+    "about twice or half the national rate, not a precise town figure.",
+    "PHIDU advises extra care where a town has a larger share of Aboriginal and Torres Strait "
+    "Islander residents than the wider area it draws from.",
+    "Public hospitals only, counted by where patients live. Hospital data scope differs between "
+    "states and territories, so comparisons across state borders need care.",
+]
+HOSPITAL_CONTEXT_STATUS_TEXT = {
+    "suppressed": "Not published for this area: PHIDU suppresses small numbers.",
+    "not_available": "Not available from PHIDU for this area.",
+    "not_interpretable": (
+        "Not shown: the source lists zero for every hospital and emergency department measure for "
+        "this town, the same pattern as records with no residents, so it most likely means no data "
+        "were assigned rather than no admissions."
+    ),
+}
+
 # The neutral default map layer is categorical, not one of the percentage indicators above.
 DEFAULT_MAP_LAYER = "remoteness_name"

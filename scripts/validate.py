@@ -44,6 +44,15 @@ CONTEXT_ONLY_INDICATORS = {"indigenous_pct"}
 # as a displayed indicator.
 RETIRED_DISPLAY_INDICATORS = {"unemployed_residents_pct"}
 
+# PHIDU Hospital_data_workbook.xlsx (Data sheet, SR columns 4 and 23) and master-workbook PHA
+# flags, read directly from the archived originals: (PHA code, public admissions SR, PPH SR).
+HOSPITAL_ANCHORS = {
+    "UCL121013": ("10193", 156.6, 227.7),  # Brewarrina (L): Bourke - Brewarrina/ Walgett - Lightning Ridge
+    "UCL322071": ("30183", 188.1, 346.1),  # Laura (L) (Qld): Far North (Qld)
+    "UCL621009": (None, 105.9, 83.8),  # Currie (L): not in PHIDU's split list; no PHA identified
+}
+HOSPITAL_STATUSES = {"available", "suppressed", "not_available", "not_interpretable"}
+
 errors: list[str] = []
 
 
@@ -175,6 +184,41 @@ def main() -> int:
     for code, label in ten4ten.get("communityLabels", {}).items():
         check(code in tag_codes, f"ten4ten.json community label for untagged town {code}")
         check(bool(label.strip()), f"ten4ten.json empty community label for {code}")
+
+    # Hospital-services context (PHIDU, PHA-derived): separate file, separate licence, never a
+    # distribution or map layer, never allocated counts.
+    hospital = json.loads((DATA_DIR / "hospital_context.json").read_text(encoding="utf-8"))
+    licence = hospital.get("licence", {})
+    check(licence.get("name") == "CC BY-NC-SA 3.0 AU", "hospital_context.json licence must be CC BY-NC-SA 3.0 AU")
+    check(licence.get("url", "").startswith("https://creativecommons.org/licenses/by-nc-sa/3.0/au"), "hospital_context.json licence URL")
+    check("PHIDU" in licence.get("attribution", ""), "hospital_context.json must attribute PHIDU")
+    check(bool(hospital.get("caveats")), "hospital_context.json has no caveats")
+    check(set(hospital.get("towns", {})) == set(codes), "hospital_context.json towns differ from primary towns")
+    hospital_keys = set(hospital.get("indicators", {}))
+    check(hospital_keys == {"public_admissions", "pph"}, f"hospital_context.json indicators {sorted(hospital_keys)}")
+    check(not hospital_keys & {k.removesuffix("_pct") for k in indicators}, "hospital indicators must not be in indicators.json")
+    sr_by_pha: dict[tuple[str, str], set[float]] = {}
+    for code, entry in hospital.get("towns", {}).items():
+        check(set(entry) == {"phaCode", "phaName", "sharedUclCount", "values"}, f"{code} hospital fields {sorted(entry)}")
+        check(bool(entry["phaCode"]) == bool(entry["phaName"]), f"{code} PHA code/name mismatch")
+        for key in hospital_keys:
+            value = entry["values"][key]
+            check(set(value) == {"status", "sr"}, f"{code} {key} must carry only status and sr (no allocated counts)")
+            check(value["status"] in HOSPITAL_STATUSES, f"{code} {key} status {value['status']!r}")
+            if value["status"] == "available":
+                check(isinstance(value["sr"], (int, float)) and value["sr"] > 0, f"{code} {key} available but sr={value['sr']!r}")
+            else:
+                check(value["sr"] is None, f"{code} {key} is {value['status']} but has sr={value['sr']!r}")
+            if entry["phaCode"] and value["status"] == "available":
+                sr_by_pha.setdefault((entry["phaCode"], key), set()).add(value["sr"])
+    for (pha_code, key), values in sr_by_pha.items():
+        check(len(values) == 1, f"PHA {pha_code} {key}: towns from one PHA carry different ratios {sorted(values)}")
+    for code, (pha_code, admissions, pph) in HOSPITAL_ANCHORS.items():
+        entry = hospital.get("towns", {}).get(code)
+        check(entry is not None, f"Hospital anchor {code} missing")
+        if entry:
+            got = (entry["phaCode"], entry["values"]["public_admissions"]["sr"], entry["values"]["pph"]["sr"])
+            check(got == (pha_code, admissions, pph), f"{code} hospital context {got} != source {(pha_code, admissions, pph)}")
 
     if errors:
         print(f"VALIDATION FAILED: {len(errors)} error(s)")
