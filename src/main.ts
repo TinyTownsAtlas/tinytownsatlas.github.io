@@ -1,11 +1,16 @@
 import { healthIndicators, loadAtlasData } from "./data";
 import { buildSearchIndex, search } from "./search";
-import { DEFAULT_OUTCOME, StateStore, readStateFromUrl, writeStateToUrl, type AppState } from "./state";
+import { DEFAULT_OUTCOME, StateStore, parseState, readStateFromUrl, writeStateToUrl, type AppState } from "./state";
+import { initAssistant } from "./assistant";
 import { createMap } from "./map";
 import { renderTownPanel } from "./panel";
 import { renderLegend } from "./legend";
 import { initSheet, SHEET_MEDIA_QUERY } from "./sheet";
 import { getMapLayers, resolveLayer } from "./layers";
+
+// Worker endpoint for the assistant. Set VITE_ASSISTANT_URL (e.g. in .env.production) after deploying
+// the Worker; in local development it defaults to `wrangler dev`.
+const ASSISTANT_URL: string = import.meta.env.VITE_ASSISTANT_URL ?? (import.meta.env.DEV ? "http://localhost:8787/chat" : "");
 
 async function main(): Promise<void> {
   const data = await loadAtlasData();
@@ -173,6 +178,23 @@ async function main(): Promise<void> {
     if (!searchResultsEl.contains(e.target as Node) && e.target !== searchInput) {
       searchResultsEl.hidden = true;
     }
+  });
+
+  // "Ask the Atlas" chat. Without a configured Worker URL (see ASSISTANT_URL) the button stays hidden.
+  initAssistant({
+    url: ASSISTANT_URL,
+    getContext: () => {
+      const s = store.get();
+      return { uclCode: s.selectedUclCode, layer: s.layer, outcome: s.outcome };
+    },
+    // A link inside an answer opens the town/layer in place instead of reloading the page.
+    onNavigate: (search) => {
+      const target = parseState(search);
+      const layer = resolveLayer(mapLayers, target.layer).key;
+      if (layer !== store.get().layer) store.setLayer(layer, { healthKeys });
+      if (target.selectedUclCode && data.townsByCode.has(target.selectedUclCode)) store.selectTown(target.selectedUclCode);
+    },
+    isMobile: () => window.matchMedia(SHEET_MEDIA_QUERY).matches,
   });
 
   const initial = store.get();

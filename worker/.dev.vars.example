@@ -1,0 +1,5 @@
+# Copy to .dev.vars (git-ignored) for `npm run dev`.
+OPENAI_API_KEY=sk-...your-dedicated-project-key...
+# Serve the built site locally (npm run preview, port 4173) so the Worker reads the local index:
+ATLAS_BASE_URL=http://localhost:4173
+ALLOW_NO_ORIGIN=1

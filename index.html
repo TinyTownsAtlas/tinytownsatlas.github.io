@@ -17,19 +17,22 @@
           <h1>Tiny Towns Atlas</h1>
           <p id="subtitle">Health and social context across Australia's small communities</p>
         </div>
-        <div id="search-wrap">
-          <input
-            id="search-input"
-            type="text"
-            placeholder="Find a town..."
-            autocomplete="off"
-            aria-label="Find a town"
-            role="combobox"
-            aria-controls="search-results"
-            aria-expanded="false"
-            aria-autocomplete="list"
-          />
-          <ul id="search-results" role="listbox" hidden></ul>
+        <div id="topbar-actions">
+          <div id="search-wrap">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Find a town..."
+              autocomplete="off"
+              aria-label="Find a town"
+              role="combobox"
+              aria-controls="search-results"
+              aria-expanded="false"
+              aria-autocomplete="list"
+            />
+            <ul id="search-results" role="listbox" hidden></ul>
+          </div>
+          <button id="ask-open" type="button" aria-expanded="false" aria-controls="ask">Ask the Atlas</button>
         </div>
       </header>
 
@@ -48,6 +51,20 @@
           <button id="panel-handle" type="button" aria-label="Expand or collapse town profile" aria-expanded="false"></button>
           <div id="panel-content"></div>
         </aside>
+
+        <section id="ask" role="dialog" aria-label="Ask Tiny Towns Atlas" hidden>
+          <header id="ask-header">
+            <h2>Ask Tiny Towns Atlas</h2>
+            <button id="ask-close" type="button" aria-label="Close assistant">&times;</button>
+          </header>
+          <div id="ask-log" role="log" aria-live="polite"></div>
+          <div id="ask-starters"></div>
+          <form id="ask-form" autocomplete="off">
+            <input id="ask-input" type="text" maxlength="600" placeholder="Ask about a town or measure" aria-label="Your question" />
+            <button id="ask-send" type="submit">Send</button>
+          </form>
+          <p id="ask-note">AI assistant. Answers use only public Atlas data and can contain mistakes. Check figures in the linked town profile. Not medical advice.</p>
+        </section>
 
         <div id="intro-blurb">
           <p>

@@ -1,0 +1,21 @@
+name = "tiny-towns-atlas-assistant"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+workers_dev = true
+preview_urls = false
+
+[vars]
+OPENAI_MODEL = "gpt-5.6-luna"
+OPENAI_REASONING_EFFORT = "low"
+ATLAS_BASE_URL = "https://tinytownsatlas.github.io"
+ALLOWED_ORIGINS = "https://tinytownsatlas.github.io,http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173"
+
+# Per-IP throttle: 15 questions per minute. Uses Cloudflare's Workers rate limiting binding.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "7301"
+  [ratelimits.simple]
+  limit = 15
+  period = 60
+
+# OPENAI_API_KEY is a Worker secret: `npx wrangler secret put OPENAI_API_KEY`. Never put it here.

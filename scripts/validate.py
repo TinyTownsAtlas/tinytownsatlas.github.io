@@ -53,6 +53,12 @@ HOSPITAL_ANCHORS = {
 }
 HOSPITAL_STATUSES = {"available", "suppressed", "not_available", "not_interpretable"}
 
+# assistant_index.json may contain exactly these keys (public data only; no counts for hospital measures).
+ASSISTANT_TOP_KEYS = {
+    "version", "generatedAt", "siteUrl", "scope", "links", "states", "remotenessOrder", "indicators", "hospital", "towns",
+}
+ASSISTANT_TOWN_KEYS = {"code", "name", "display", "state", "stateName", "pop", "remoteness", "ten4ten", "alias", "ind", "hosp"}
+
 errors: list[str] = []
 
 
@@ -239,6 +245,38 @@ def main() -> int:
         if entry:
             got = (entry["phaCode"], entry["values"]["public_admissions"]["sr"], entry["values"]["pph"]["sr"])
             check(got == (pha_code, admissions, pph), f"{code} hospital context {got} != source {(pha_code, admissions, pph)}")
+
+    # --- assistant_index.json: public-data-only index for the Ask Tiny Towns Atlas Worker ---
+    assistant_path = DATA_DIR / "assistant_index.json"
+    check(assistant_path.exists(), "assistant_index.json missing (run scripts/build_assistant_index.py)")
+    if assistant_path.exists():
+        assistant = json.loads(assistant_path.read_text(encoding="utf-8"))
+        check(set(assistant) == ASSISTANT_TOP_KEYS, f"assistant_index top-level keys {sorted(assistant)} unexpected")
+        a_towns = assistant.get("towns", [])
+        check([t["code"] for t in a_towns] == [t["ucl_code"] for t in towns], "assistant_index towns differ from towns.json")
+        check(set(assistant.get("indicators", {})) == set(indicators), "assistant_index indicators differ from indicators.json")
+        by_code = {t["ucl_code"]: t for t in towns}
+        for a in a_towns:
+            check(set(a) == ASSISTANT_TOWN_KEYS, f"{a['code']} assistant entry has unexpected keys {sorted(set(a) ^ ASSISTANT_TOWN_KEYS)}")
+            src = by_code.get(a["code"])
+            if not src:
+                continue
+            for key, (pct, count, denom) in a["ind"].items():
+                stem = key.replace("_pct", "")
+                check(
+                    (pct, count, denom) == (src[key], src[f"{stem}_count"], src[f"{stem}_denominator"]),
+                    f"{a['code']} {key} differs between assistant_index and towns.json",
+                )
+            for key in ("public_admissions", "pph"):
+                value = a["hosp"][key]
+                check(set(value) == {"status", "sr"}, f"{a['code']} assistant hospital {key} carries fields beyond status/sr")
+                src_value = hospital["towns"][a["code"]]["values"][key]
+                check(value == src_value, f"{a['code']} assistant hospital {key} differs from hospital_context.json")
+        check("unemployed_residents_pct" not in assistant.get("indicators", {}), "assistant_index re-exposes unemployed_residents_pct")
+        check(all(not v.get("isRankable", False) for v in assistant.get("indicators", {}).values()), "assistant_index marks an indicator rankable")
+        blob = json.dumps(assistant)
+        for private in ("screening", "participant", "05_source_archive", "Dropbox"):
+            check(private.lower() not in blob.lower(), f"assistant_index mentions non-public term {private!r}")
 
     if errors:
         print(f"VALIDATION FAILED: {len(errors)} error(s)")

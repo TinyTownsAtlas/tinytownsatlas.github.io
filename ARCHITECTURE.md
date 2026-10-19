@@ -1,6 +1,6 @@
 # ARCHITECTURE
 
-Static, client-only site. No backend, no database, no runtime Python.
+Static, client-only site. No database, no runtime Python. The one backend piece is the optional assistant Worker (below); the site works without it.
 
 ## App structure
 
@@ -165,3 +165,7 @@ Build-time (Python, not shipped):
 No React, no state-management library, no CSS framework, no charting-as-a-service, no analytics,
 no authentication — none of these are needed for a static public MVP and each is explicitly listed
 in the brief as something to avoid or not required.
+
+## Assistant (optional)
+
+`src/assistant.ts` is a small chat panel (button in the top bar; full-screen on mobile, so it does not compete with the town bottom sheet). It posts the last few messages plus the selected town and layer to a Cloudflare Worker (`worker/`, URL from `VITE_ASSISTANT_URL`; button hidden when unset). The Worker runs deterministic queries over `public/data/assistant_index.json` and uses an OpenAI model only to pick tools and phrase the answer. Instructions live in `assistant/ASSISTANT_CONTEXT.md`. Atlas links in answers open the town or layer in place via the existing state store. Details: `worker/README.md`.

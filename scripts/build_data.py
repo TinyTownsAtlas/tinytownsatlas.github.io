@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 
+import build_assistant_index
 from indicator_defs import (
     DEFAULT_MAP_LAYER,
     HOSPITAL_CONTEXT,
@@ -319,6 +320,9 @@ def main() -> None:
     print(f"ten4ten.json: {len(ten4ten_out['uclCodes'])} tagged town(s)")
     print(f"hospital_context.json: {len(hospital_towns)} towns")
     print("manifest.json written")
+
+    # Public-data-only index for the Ask Tiny Towns Atlas Worker (see build_assistant_index.py).
+    build_assistant_index.main()
 
 
 if __name__ == "__main__":

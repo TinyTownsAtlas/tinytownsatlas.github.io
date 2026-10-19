@@ -1,0 +1,17 @@
+{
+  "name": "tiny-towns-atlas-assistant",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "embed": "node scripts/embed-context.mjs",
+    "typecheck": "npm run embed && tsc --noEmit",
+    "dev": "npm run embed && wrangler dev",
+    "deploy": "npm run embed && wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261006.1",
+    "typescript": "^5.6.3",
+    "wrangler": "^4.0.0"
+  }
+}
