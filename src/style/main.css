@@ -526,33 +526,62 @@ body {
   }
 
   #panel {
+    --sheet-peek: 96px;
     top: auto;
     left: 0;
     right: 0;
     width: auto;
     height: 68dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* the scrolling region is #panel-content, so the sheet itself never scrolls */
     border-left: none;
     border-top: 1px solid var(--color-border);
     border-radius: 14px 14px 0 0;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
-    transform: translateY(calc(100% - 96px));
+    transform: translateY(calc(100% - var(--sheet-peek)));
     transition: transform 0.25s ease;
-    padding-top: 0.5rem;
+    padding: 0.5rem 0 0;
+    /* A gesture on the sheet is never handed to the page or the map behind it. */
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+
+  #panel.sheet-dragging {
+    transition: none;
   }
 
   body.panel-expanded #panel {
     transform: translateY(0);
   }
 
+  #panel-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0 1.25rem 2rem;
+    overflow-y: hidden; /* peek: the sheet is dragged, not scrolled */
+  }
+
+  body.panel-expanded #panel-content {
+    overflow-y: auto;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
   #panel-handle {
     display: block;
-    width: 40px;
-    height: 24px;
+    flex: none;
+    width: 100%;
+    height: 32px;
     border: 0;
-    background: linear-gradient(var(--color-border), var(--color-border)) center / 40px 4px no-repeat;
+    background: linear-gradient(var(--color-muted), var(--color-muted)) center / 40px 4px no-repeat;
+    background-color: transparent;
+    opacity: 0.55;
     border-radius: 2px;
-    margin: 0.4rem auto 0.5rem;
+    margin: 0;
     cursor: pointer;
+    touch-action: none;
   }
 
   #panel-close {

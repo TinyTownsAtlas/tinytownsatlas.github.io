@@ -4,6 +4,7 @@ import { DEFAULT_OUTCOME, StateStore, readStateFromUrl, writeStateToUrl, type Ap
 import { createMap } from "./map";
 import { renderTownPanel } from "./panel";
 import { renderLegend } from "./legend";
+import { initSheet } from "./sheet";
 import { getMapLayers, resolveLayer } from "./layers";
 
 async function main(): Promise<void> {
@@ -67,6 +68,7 @@ async function main(): Promise<void> {
     const town = state.selectedUclCode ? data.townsByCode.get(state.selectedUclCode) : undefined;
     if (!town) {
       panelEl.hidden = true;
+      panelEl.style.removeProperty("transform");
       document.body.classList.remove("panel-open", "panel-expanded");
       panelHandleEl.setAttribute("aria-expanded", "false");
       atlasMap.setSelected(null);
@@ -79,7 +81,7 @@ async function main(): Promise<void> {
     });
     panelEl.hidden = false;
     const panelKey = `${town.ucl_code}:${state.layer}:${state.outcome}`;
-    if (shownPanelKey !== panelKey) panelEl.scrollTop = 0;
+    if (shownPanelKey !== panelKey) panelEl.scrollTop = panelContentEl.scrollTop = 0;
     shownPanelKey = panelKey;
     document.body.classList.add("panel-open");
     atlasMap.setSelected(town.ucl_code);
@@ -101,11 +103,8 @@ async function main(): Promise<void> {
 
   panelCloseEl.addEventListener("click", () => store.selectTown(null));
 
-  // Mobile bottom-sheet: tap the handle to toggle peek/expanded.
-  panelHandleEl.addEventListener("click", () => {
-    const expanded = document.body.classList.toggle("panel-expanded");
-    panelHandleEl.setAttribute("aria-expanded", String(expanded));
-  });
+  // Mobile bottom sheet: drag or tap the handle to move between peek and expanded.
+  initSheet({ panel: panelEl, handle: panelHandleEl, content: panelContentEl });
 
   layerSelect.addEventListener("change", () => {
     store.setLayer(layerSelect.value, { healthKeys });
