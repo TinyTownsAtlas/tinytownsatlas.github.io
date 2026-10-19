@@ -1,11 +1,11 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { AtlasData } from "./data";
-import { colorExpression, getMapLayers, type MapLayer } from "./layers";
+import { colorExpression, getMapLayers, hospitalMapValues, populationRadiusExpression, sharedHospitalTowns, type MapLayer } from "./layers";
 
 // Dot styling shared with the legend swatches (see legend.ts), so the legend shows the colour as
 // it is drawn on the map.
-export const DOT_STYLE = { radius: 4, strokeWidth: 1, strokeColor: "#ffffff", opacity: 0.85 };
+export const DOT_STYLE = { strokeWidth: 1, strokeColor: "#ffffff", opacity: 0.85 };
 
 // Free, keyless OpenStreetMap standard raster tiles (no API key, no paid service).
 const BASEMAP_TILES = [
@@ -42,7 +42,7 @@ export function createMap(
     },
     center: [134.0, -25.5],
     zoom: 3.4,
-    minZoom: 3,
+    minZoom: 2,
     maxZoom: 12,
     attributionControl: { compact: true },
   });
@@ -72,7 +72,9 @@ export function createMap(
         ...f,
         properties: {
           ...f.properties,
+          population: town.population,
           ...Object.fromEntries(layerKeys.map((k) => [k, town[k]])),
+          ...hospitalMapValues(data, code),
         },
       };
     }),
@@ -89,6 +91,11 @@ export function createMap(
 
   map.on("load", () => {
     map.resize();
+    if (!selectedCode && container.clientWidth <= 700) {
+      map.fitBounds([[112, -44], [154, -10]], {
+        padding: {top: 110, bottom: 100, left: 16, right: 16}, duration: 0,
+      });
+    }
     map.addSource("towns", { type: "geojson", data: primaryGeoJSON });
 
     map.addLayer({
@@ -96,7 +103,7 @@ export function createMap(
       type: "circle",
       source: "towns",
       paint: {
-        "circle-radius": DOT_STYLE.radius,
+        "circle-radius": populationRadiusExpression() as maplibregl.ExpressionSpecification,
         "circle-color": paint(currentLayer),
         "circle-stroke-width": DOT_STYLE.strokeWidth,
         "circle-stroke-color": DOT_STYLE.strokeColor,
@@ -105,34 +112,47 @@ export function createMap(
     });
 
     map.addLayer({
+      id: "towns-shared-pha", type: "circle", source: "towns",
+      filter: ["==", ["get", "ucl_code"], "__none__"],
+      paint: {"circle-radius": ["+", populationRadiusExpression(), 2] as maplibregl.ExpressionSpecification, "circle-color": "rgba(0,0,0,0)",
+        "circle-stroke-width": 1.5, "circle-stroke-color": "#465765"},
+    });
+    map.addLayer({
       id: "towns-selected",
       type: "circle",
       source: "towns",
       filter: ["==", ["get", "ucl_code"], "__none__"],
       paint: {
-        "circle-radius": 8,
-        "circle-color": paint(currentLayer),
+        "circle-radius": ["+", populationRadiusExpression(), 3] as maplibregl.ExpressionSpecification,
+        "circle-color": "rgba(0,0,0,0)",
         "circle-stroke-width": 2.5,
         "circle-stroke-color": "#111111",
       },
     });
+    setSelected(selectedCode);
 
-    map.on("click", "towns-circle", (e) => {
+    // Transparent hit targets keep 100-resident settlements clickable without inflating their area.
+    map.addLayer({id: "towns-hit", type: "circle", source: "towns", paint: {
+      "circle-radius": ["max", 7, populationRadiusExpression()] as maplibregl.ExpressionSpecification,
+      "circle-color": "rgba(0,0,0,0)",
+    }});
+
+    map.on("click", "towns-hit", (e) => {
       const feature = e.features?.[0];
       if (!feature) return;
       const code = (feature.properties as { ucl_code: string }).ucl_code;
       onSelect(code);
     });
 
-    map.on("mouseenter", "towns-circle", () => {
+    map.on("mouseenter", "towns-hit", () => {
       map.getCanvas().style.cursor = "pointer";
     });
-    map.on("mouseleave", "towns-circle", () => {
+    map.on("mouseleave", "towns-hit", () => {
       map.getCanvas().style.cursor = "";
     });
 
     const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
-    map.on("mousemove", "towns-circle", (e) => {
+    map.on("mousemove", "towns-hit", (e) => {
       const feature = e.features?.[0];
       if (!feature) return;
       // Name and Remoteness Area only: no indicator values on hover (see ARCHITECTURE.md).
@@ -142,14 +162,14 @@ export function createMap(
         .setHTML(`<strong>${escapeHtml(props.ucl_name)}</strong><br/>${escapeHtml(props.remoteness_name)}`)
         .addTo(map);
     });
-    map.on("mouseleave", "towns-circle", () => popup.remove());
+    map.on("mouseleave", "towns-hit", () => popup.remove());
   });
 
   function setLayer(layer: MapLayer): void {
     currentLayer = layer;
     if (!map.getLayer("towns-circle")) return;
     map.setPaintProperty("towns-circle", "circle-color", paint(layer));
-    map.setPaintProperty("towns-selected", "circle-color", paint(layer));
+    setSelected(selectedCode);
   }
 
   function flyToTown(lon: number, lat: number): void {
@@ -160,6 +180,8 @@ export function createMap(
     selectedCode = uclCode;
     if (!map.getLayer("towns-selected")) return;
     map.setFilter("towns-selected", ["==", ["get", "ucl_code"], selectedCode ?? "__none__"]);
+    const shared = currentLayer.kind === "hospital" ? sharedHospitalTowns(data, selectedCode, currentLayer.key) : [];
+    map.setFilter("towns-shared-pha", ["in", ["get", "ucl_code"], ["literal", shared]]);
   }
 
   return { map, setLayer, flyToTown, setSelected };

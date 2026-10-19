@@ -37,7 +37,7 @@ QUICKSTATS_ANCHORS = {
         "unemployment_rate": (13, 254, 5.1),
     },
 }
-REQUIRED_HEALTH_INDICATORS = {"diabetes_pct", "cancer_pct"}
+REQUIRED_HEALTH_INDICATORS = {f"{stem}_pct" for stem in ("diabetes", "cancer", "asthma", "arthritis", "mental_health", "heart_disease", "lung_condition", "kidney_disease", "stroke", "dementia")}
 # Context-only: may never become a map colour layer or a health outcome.
 CONTEXT_ONLY_INDICATORS = {"indigenous_pct"}
 # Replaced in the display by unemployment_rate_pct (unemployed / labour force); must not return
@@ -128,6 +128,8 @@ def main() -> int:
         )
         check(meta.get("isDefaultMapLayer") is False, f"Indicator {key} must not be the default map layer")
 
+    check({k for k, m in indicators.items() if m["category"] == "health"} == REQUIRED_HEALTH_INDICATORS, "Health indicators must be exactly the ten Census LTHP conditions")
+    check(manifest.get("defaultMapLayer") == "all_towns", "Default must be All towns")
     for key in REQUIRED_HEALTH_INDICATORS:
         check(key in indicators and indicators[key]["category"] == "health", f"Missing health indicator {key}")
     for key in CONTEXT_ONLY_INDICATORS:
@@ -156,6 +158,24 @@ def main() -> int:
         for stem, (num, den, pct) in anchors.items():
             got = (t.get(f"{stem}_count"), t.get(f"{stem}_denominator"), t.get(f"{stem}_pct"))
             check(got == (num, den, pct), f"{code} {stem}: {got} != ABS QuickStats {(num, den, pct)}")
+
+    # Recompute the complete distributions and ratios, rather than checking only group counts.
+    import pandas as pd
+    from build_data import compute_stats
+    from build_data import ANALYTIC_CSV
+    analytic = pd.read_csv(ANALYTIC_CSV)
+    frame = analytic[analytic["ucl_code"].isin(codes)]
+    for key in REQUIRED_HEALTH_INDICATORS:
+        meta = indicators[key]
+        check(meta.get("mapLayer") is True, f"{key} must be opt-in map layer")
+        check(any("age-standardised" in c for c in meta["caveats"]), f"{key} lacks age caveat")
+        check(meta["nationalStats"] == compute_stats(frame[key]), f"{key} national distribution differs")
+        for name, group in frame.groupby("remoteness_name"):
+            check(meta["remotenessStats"][name] == compute_stats(group[key]), f"{key} {name} distribution differs")
+        for town in towns_full:
+            num, den = town[meta["numeratorField"]], town[meta["denominatorField"]]
+            check(0 <= num <= den and den == town["population"], f"{town['ucl_code']} {key} invalid numerator/denominator")
+            check(town[key] == round(100 * num / den, meta["precision"]), f"{town['ucl_code']} {key} ratio mismatch")
 
     # Manifest / provenance presence
     check(manifest.get("primaryCount") == expected_primary, "manifest.primaryCount mismatch")
@@ -186,7 +206,7 @@ def main() -> int:
         check(bool(label.strip()), f"ten4ten.json empty community label for {code}")
 
     # Hospital-services context (PHIDU, PHA-derived): separate file, separate licence, never a
-    # distribution or map layer, never allocated counts.
+    # town distribution; SR-only map layers never read allocated counts.
     hospital = json.loads((DATA_DIR / "hospital_context.json").read_text(encoding="utf-8"))
     licence = hospital.get("licence", {})
     check(licence.get("name") == "CC BY-NC-SA 3.0 AU", "hospital_context.json licence must be CC BY-NC-SA 3.0 AU")

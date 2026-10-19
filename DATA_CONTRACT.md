@@ -73,6 +73,40 @@ Town-level anchors checked against ABS 2021 Census QuickStats for the same UCL
 743 (7.0%); cancer (including remission) 13 of 743 (1.7%); unemployed 13 of 254 in the labour force
 (5.1%).
 
+
+### All ten Census long-term conditions (UX2)
+
+The same LTHP block supplies all ten outcomes. The following are independently verified 0-based
+numerator/denominator column indices; every denominator header is `Tot_P_P` (all usual residents).
+The build checks each exact header and the complete LTHP block wording/geography and fails if a
+new block appears inside columns 8–47. Each outcome has the same primary-universe national and
+same-Remoteness-Area distribution calculations. Existing diabetes/cancer outputs are regression
+checked unchanged.
+
+| Stem | Numerator header | Columns |
+|---|---|---|
+| arthritis | P_Arthritis_Tot | 8 / 9 |
+| asthma | P_Asthma_Tot | 12 / 13 |
+| cancer | P_Cancer_Tot | 16 / 17 |
+| dementia | P_Dementia_Tot | 20 / 21 |
+| diabetes | P_Diabetes_Tot | 24 / 25 |
+| heart_disease | P_Heart_disease_Tot | 28 / 29 |
+| kidney_disease | P_Kidney_disease_Tot | 32 / 33 |
+| lung_condition | P_Lung_cond_Tot | 36 / 37 |
+| mental_health | P_Mental_health_cond_Tot | 40 / 41 |
+| stroke | P_Stroke_Tot | 44 / 45 |
+
+Full category definitions follow the [ABS 2021 LTHP dictionary](https://www.abs.gov.au/census/guide-census-data/census-dictionary/2021/variables-topic/health/type-long-term-health-condition-lthp),
+including remission for cancer, Alzheimer's for dementia, heart attack or angina for heart disease,
+COPD or emphysema for lung condition, and depression or anxiety for mental health condition.
+These are Census-reported doctor/nurse-diagnosed long-term conditions, not clinical prevalence
+estimates. They are not age-standardised; small denominators and Census perturbation affect
+interpretation. Multiple conditions can be reported, so these percentages must not be summed.
+
+The landing scope is explicit: **Tiny towns with 100–1,499 usual residents**. Point area encodes
+population consistently across all layers. The All towns default adds no category/measure colour;
+Remoteness (ABS) is optional geographic accessibility context and remains a comparator grouping.
+
 ### Unemployment display change (October 2026)
 
 The Atlas previously displayed `unemployed_residents_pct` (unemployed / **all usual residents**,
@@ -92,9 +126,12 @@ uses people aged 15+ (44.3% for Brewarrina in QuickStats versus 34.2% here).
 
 ### Hospital services: broader-area context (PHIDU, PHA-derived)
 
-Shown in each town profile under "Hospital services: broader-area context", from
-`public/data/hospital_context.json`. Not a town measure: no town distributions, no map layer, no
-entry in `indicators.json`, and no allocated admission counts.
+Published separately in `public/data/hospital_context.json`. Two opt-in SR-only point colour
+layers surface this context near the top of the profile when active. These remain broader-area
+estimates, never direct town observations: no town distributions, no entry in Census
+`indicators.json`, no allocated admission counts. The scale is centred on Australia = 100,
+with equal log-ratio distances from 50 to 100 and 100 to 200; colours saturate outside 50–200.
+Missing/suppressed/uninterpretable statuses use a separate neutral colour, never zero.
 
 **Source.** `05_source_archive/PHIDU_John_Glover/prior_validated_sources/Hospital_data_workbook.xlsx`
 (sha256 checked against `diabetology_source_manifest.csv`), sheet `Data`, with definitions in
@@ -121,12 +158,14 @@ PHIDU did not supply a PHA code or name, and the files do not establish which PH
 used (PHIDU's notes say only which UCLs are in the split list). The panel says the area was not
 identified and does not name or describe one. The flag covers only UCLs with under 50% of their
 PHA: each PHA's main UCL (usually a larger town outside the Atlas scope, e.g. Broken Hill for the
-Wilcannia/Ivanhoe/Menindee PHA) is unflagged but carries identical ratios. The panel therefore
-counts sharing from the values themselves: UCLs in the workbook with an identical public-admissions
-ratio (exact to about 1e-12; the build checks that their PPH ratios also agree where published and
-that every flagged PHA group falls in one such set). It names the PHA when the flag gives one and
-states how many other UCLs show the same values; for the 45 unflagged Atlas towns, none share
-values with another UCL.
+Wilcannia/Ivanhoe/Menindee PHA) is unflagged but carries identical ratios. The build retains its validated all-workbook matching-value count (`sharedUclCount`) for
+compatibility, but the UI now uses the more conservative supplied source geography: it counts and
+outlines **other primary Atlas towns** with the same supplied PHA code and a published selected
+measure. This avoids implying a known shared source area from matching numbers, or claiming
+that suppressed PPH values match. The count excludes unflagged larger UCLs and can therefore be
+smaller than `sharedUclCount - 1`. For the 45 towns without a supplied PHA code, the UI says the
+area was not identified and does not infer peers, names or boundaries. Outlines are town markers,
+not geographic boundaries.
 
 **Missing values.** Workbook symbols are kept as statuses, never as zeros: `#` (number not shown:
 population under 100 or fewer than 6 admissions) with `..` for the rate and ratio ->
@@ -282,7 +321,7 @@ never a zero, blank, or interpolated value, and exclude the town from that indic
 
 Every indicator entry is required to carry `caveats` (>=1 entry), `source` and `definition`. The
 frontend build/lint step (`validate.py`, run before `npm run build`) fails if any indicator lacks
-one. `category: "health"` indicators (diabetes, cancer) populate the town panel's Health outcome
+one. `category: "health"` indicators (the ten Census LTHP conditions) populate the town panel's Health outcome
 selector, with national and same-Remoteness-Area distributions; `category: "context"` indicators
 populate "People and context". Indicators appear in `indicators.json` order.
 

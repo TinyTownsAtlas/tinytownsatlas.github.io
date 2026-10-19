@@ -8,7 +8,7 @@ Static, client-only site. No backend, no database, no runtime Python.
 04_site/
   src/
     main.ts              entry point, app shell, router/state wiring
-    state.ts              URL <-> app state (selected town, map layer, health outcome)
+    state.ts              URL <-> app state (selected town, map layer, health outcome; default layer `all_towns`)
     search.ts              client-side prefix/substring search, with state names/abbreviations
     layers.ts              map layer registry: remoteness palette + opt-in health layers; builds
                            both the map paint expression and the legend input
@@ -63,23 +63,31 @@ the brief explicitly asks to avoid React unless concretely needed.
   ("can be shown") but is not required for done-ness, so it is deferred past MVP (polygon geometry
   is still produced and stored in the GeoJSON as a `polygon` property — simplified, encoded as a
   nested GeoJSON geometry string — so a later iteration can add it without a new build step).
-- Circle color = neutral default layer (Remoteness Area, categorical). The layer picker is
-  generated from data: remoteness, then every `category: "health"` indicator with
-  `mapLayer: true` in `indicators.json` (currently Census-reported diabetes and cancer). Context
-  indicators, including the Aboriginal and Torres Strait Islander share, are never map layers.
-  Switching layers never re-sorts or ranks towns; it only changes the `circle-color` paint
-  expression.
-- `layers.ts` is the only place colours are defined. The map paint expression and the legend are
-  both derived from the same `MapLayer` object, and `main.ts` applies a layer to the selector, the
-  map and the legend in one function, including on first load from a URL. (Before October 2026
-  the map started from the default layer while the legend and selector followed `?layer=`, so a
-  reloaded or shared diabetes link showed a diabetes legend over remoteness-coloured dots.)
-  `layers.test.ts` checks the expression and legend colours match and that no other module
-  hard-codes the palette.
-- PHIDU hospital estimates are not a map layer: they are Population Health Area values allocated to
-  UCLs, so neighbouring towns share one value and a town-level dot colour would misrepresent them.
-  They appear only in the town panel's "Hospital services: broader-area context" section, from
-  their own file (`hospital_context.json`, CC BY-NC-SA 3.0 AU). See DATA_CONTRACT.md.
+- **Size = population, colour = selected layer.** All layers share `0.2 * sqrt(population)`
+  pixel radii (2–7.75px for the primary universe), making marker area proportional to population.
+  Transparent hit targets have at least a 7px radius; selected and PHA peer outlines add emphasis
+  without changing the base population encoding. The size legend uses the same radius function.
+- **All towns** is the neutral default (no measure/category legend). Native optgroups separate
+  Health conditions (ten metadata-driven Census outcomes), Health services (two PHIDU SR layers),
+  and Geography (Remoteness (ABS)). Context indicators are never map layers.
+- `layers.ts` owns colours, scales, the layer registry, SR-only map-property extraction and supplied
+  PHA peer selection. `main.ts` applies the resolved layer to selector, map and legend together,
+  including initial URL hydration. Population and available SRs are joined to point features in
+  memory; generated Census town records retain their separate provenance and licence.
+- Hospital colours use log-ratio stops 50/100/200 with blue/neutral/brown and Australia = 100 in
+  the centre. Endpoint saturation is explicit in the legend. Missing statuses yield null and a
+  separate neutral colour, never zero. PHIDU attribution/licence appear in the map legend and
+  panel notes. No hospital distributions, allocated counts, PHA polygons or inferred boundaries.
+- When a hospital layer is active the hospital section moves immediately after the town header,
+  with the selected measure first. PHA names are shown only when supplied. The peer count and
+  outlines use **primary Atlas towns with the same supplied PHA code and published selected
+  measure**; matching rounded ratios alone never establish source geography. The existing
+  all-workbook matching-value count remains in the dataset for compatibility, but is not used to
+  imply common geography or matching suppressed values.
+- The panel Health selector is native, supporting ten conditions without overflowing mobile.
+  Choosing a health layer selects that outcome. Changing Health outcome while a health layer is
+  active changes its map layer too. In All towns, Geography or hospital views, the Census outcome
+  remains separately selectable.
 - Click on a circle (or a search result) selects a town: opens the panel, flies the map to it,
   updates URL state. Hover shows a lightweight tooltip (name, state) — no numbers in the hover
   tooltip, to avoid inviting comparison-by-hover.
@@ -101,8 +109,8 @@ the brief explicitly asks to avoid React unless concretely needed.
 - Single source of truth: a small `state.ts` module holds `{ selectedUclCode, layer, outcome }`
   and serializes it to the URL via `URLSearchParams`
   (`?town=UCL123456&layer=cancer_pct&outcome=cancer_pct`; defaults are omitted), using
-  `history.replaceState` on internal changes and `pushState` only on an explicit new selection, so
-  back/forward moves between towns. Unknown values (e.g. `?layer=indigenous_pct`) fall back to
+  `history.pushState` for layer changes, town selections and panel closing, and `replaceState`
+  for outcome-only changes and initial URL cleanup. Back/Forward restores town and layer together. Unknown values (e.g. `?layer=indigenous_pct`) fall back to
   the defaults. Choosing a health map layer also shows that outcome in the town panel. No router
   library — three URL params do not justify one.
 - On load, `main.ts` parses the URL, hydrates state, and (if `town` is present and valid) opens the
@@ -116,9 +124,8 @@ the brief explicitly asks to avoid React unless concretely needed.
 
 - CSS media queries only (no separate mobile bundle). Breakpoint ~ 700px.
 - Desktop: fixed-width side panel docked right, map fills the remaining viewport.
-- Mobile: panel becomes a bottom sheet (three states: hidden / peek with headline stat / expanded
-  full-height scroll), map fills the viewport behind it. Implemented with a CSS class toggle plus
-  `transform: translateY(...)`, driven by a drag/tap handler in `panel.ts` — no extra dependency.
+- Mobile: panel becomes a bottom sheet (hidden / town-header peek / expanded scroll), map fills the viewport behind it. Implemented with a CSS class toggle plus
+  `transform: translateY(...)`, driven by an accessible tap button in `panel.ts` — no extra dependency.
 - Search box is full-width and reachable with one tap on both layouts; it sits above the map as an
   overlay, not inside the panel, so it works even when the panel is hidden.
 

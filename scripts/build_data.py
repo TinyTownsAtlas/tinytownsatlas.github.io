@@ -208,7 +208,7 @@ def main() -> None:
 
     # --- hospital_context.json: PHIDU PHA-derived estimates, primary towns only ---
     # A separately identifiable derived dataset under PHIDU's CC BY-NC-SA 3.0 AU licence. No
-    # allocated counts, no town distributions, no map layer (see indicator_defs.HOSPITAL_CONTEXT).
+    # allocated counts or town distributions. SR-only map layers retain the separate licence.
     hospital = pd.read_csv(HOSPITAL_CSV, dtype={"ucl_code": str, "pha_code": str}, keep_default_na=False)
     hospital = hospital.set_index("ucl_code")
     missing_hospital = set(primary["ucl_code"]) - set(hospital.index)

@@ -10,7 +10,7 @@ Fields used by the frontend beyond label/caveats/source:
   - category: "health" indicators appear in the town panel's outcome selector; "context"
     indicators appear in "People and context".
   - mapLayer: True makes the indicator an opt-in map colour layer. Only "health" indicators may
-    set it (build_data.py and validate.py enforce this); remoteness stays the default layer.
+    set it (build_data.py and validate.py enforce this); All towns is the neutral default.
   - definition: one sentence shown next to the value, so the denominator and what the measure is
     (and is not) are visible without opening the methodology drawer.
 
@@ -69,6 +69,222 @@ INDICATORS = {
             "registry incidence and not a clinically measured prevalence estimate.",
             "Does not identify cancer type, stage or when it was diagnosed.",
             "Not age-standardised: towns with older populations will tend to show higher rates.",
+            SMALL_DENOMINATOR_CAVEAT,
+        ],
+        "source": ABS_CENSUS_SOURCE,
+    },
+    # The following eight indicators are the other tick-box options in the same 2021 Census LTHP
+    # question as diabetes and cancer ("Does the person have a long-term health condition(s)?"),
+    # so a person can report more than one of these ten conditions at once; the percentages are
+    # not mutually exclusive with each other.
+    "asthma_pct": {
+        "label": "Census-reported asthma",
+        "shortLabel": "Asthma",
+        "denominatorLabel": "usual residents",
+        "category": "health",
+        "mapLayer": True,
+        "isDefaultMapLayer": False,
+        "colorScale": "sequential",
+        "description": (
+            "Share of usual residents who told the Census they have been diagnosed with asthma "
+            "by a doctor or nurse."
+        ),
+        "definition": (
+            'Usual residents reporting "Asthma" as a long-term health condition in the 2021 '
+            "Census, out of all usual residents."
+        ),
+        "caveats": [
+            "A Census-reported long-term condition, not a clinical "
+            "prevalence estimate.",
+            "Respondents could mark more than one long-term health condition, so this is not "
+            "mutually exclusive with the other Census health indicators (e.g. a person may report "
+            "both asthma and diabetes).",
+            "Not age-standardised: differences in age structure affect comparisons.",
+            SMALL_DENOMINATOR_CAVEAT,
+        ],
+        "source": ABS_CENSUS_SOURCE,
+    },
+    "arthritis_pct": {
+        "label": "Census-reported arthritis",
+        "shortLabel": "Arthritis",
+        "denominatorLabel": "usual residents",
+        "category": "health",
+        "mapLayer": True,
+        "isDefaultMapLayer": False,
+        "colorScale": "sequential",
+        "description": (
+            "Share of usual residents who told the Census they have been diagnosed with "
+            "arthritis by a doctor or nurse."
+        ),
+        "definition": (
+            'Usual residents reporting "Arthritis" as a long-term health condition in the 2021 '
+            "Census, out of all usual residents."
+        ),
+        "caveats": [
+            "A Census-reported long-term condition, not a clinical "
+            "prevalence estimate.",
+            "Not age-standardised: towns with older populations will tend to show higher rates.",
+            "Respondents could mark more than one long-term health condition, so this is not "
+            "mutually exclusive with the other Census health indicators.",
+            SMALL_DENOMINATOR_CAVEAT,
+        ],
+        "source": ABS_CENSUS_SOURCE,
+    },
+    "mental_health_pct": {
+        "label": "Census-reported mental health condition",
+        "shortLabel": "Mental health",
+        "denominatorLabel": "usual residents",
+        "category": "health",
+        "mapLayer": True,
+        "isDefaultMapLayer": False,
+        "colorScale": "sequential",
+        "description": (
+            "Share of usual residents who told the Census they have been diagnosed with a "
+            "mental health condition by a doctor or nurse."
+        ),
+        "definition": (
+            'Usual residents reporting "Mental health condition (including depression or '
+            'anxiety)" as a long-term health condition in the 2021 Census, out of all usual '
+            "residents."
+        ),
+        "caveats": [
+            "A Census-reported long-term condition that includes depression or anxiety; not a "
+            "clinical prevalence estimate.",
+            "Does not identify the specific mental health condition or its severity.",
+            "Respondents could mark more than one long-term health condition, so this is not "
+            "mutually exclusive with the other Census health indicators.",
+            "Not age-standardised: differences in age structure affect comparisons.",
+            SMALL_DENOMINATOR_CAVEAT,
+        ],
+        "source": ABS_CENSUS_SOURCE,
+    },
+    "heart_disease_pct": {
+        "label": "Census-reported heart disease",
+        "shortLabel": "Heart disease",
+        "denominatorLabel": "usual residents",
+        "category": "health",
+        "mapLayer": True,
+        "isDefaultMapLayer": False,
+        "colorScale": "sequential",
+        "description": (
+            "Share of usual residents who told the Census they have been diagnosed with heart "
+            "disease by a doctor or nurse."
+        ),
+        "definition": (
+            'Usual residents reporting "Heart disease (including heart attack or angina)" as a '
+            "long-term health condition in the 2021 Census, out of all usual residents."
+        ),
+        "caveats": [
+            "A Census-reported long-term condition that includes heart attack or angina; not a "
+            "clinical prevalence estimate.",
+            "Not age-standardised: towns with older populations will tend to show higher rates.",
+            "Respondents could mark more than one long-term health condition, so this is not "
+            "mutually exclusive with the other Census health indicators.",
+            SMALL_DENOMINATOR_CAVEAT,
+        ],
+        "source": ABS_CENSUS_SOURCE,
+    },
+    "lung_condition_pct": {
+        "label": "Census-reported lung condition",
+        "shortLabel": "Lung condition",
+        "denominatorLabel": "usual residents",
+        "category": "health",
+        "mapLayer": True,
+        "isDefaultMapLayer": False,
+        "colorScale": "sequential",
+        "description": (
+            "Share of usual residents who told the Census they have been diagnosed with a lung "
+            "condition by a doctor or nurse."
+        ),
+        "definition": (
+            'Usual residents reporting "Lung condition (including COPD or emphysema)" as a '
+            "long-term health condition in the 2021 Census, out of all usual residents."
+        ),
+        "caveats": [
+            "A Census-reported long-term condition that includes COPD or emphysema; not a "
+            "clinical prevalence estimate.",
+            "Not age-standardised: towns with older populations will tend to show higher rates.",
+            "Respondents could mark more than one long-term health condition, so this is not "
+            "mutually exclusive with the other Census health indicators.",
+            SMALL_DENOMINATOR_CAVEAT,
+        ],
+        "source": ABS_CENSUS_SOURCE,
+    },
+    "kidney_disease_pct": {
+        "label": "Census-reported kidney disease",
+        "shortLabel": "Kidney disease",
+        "denominatorLabel": "usual residents",
+        "category": "health",
+        "mapLayer": True,
+        "isDefaultMapLayer": False,
+        "colorScale": "sequential",
+        "description": (
+            "Share of usual residents who told the Census they have been diagnosed with kidney "
+            "disease by a doctor or nurse."
+        ),
+        "definition": (
+            'Usual residents reporting "Kidney disease" as a long-term health condition in the '
+            "2021 Census, out of all usual residents."
+        ),
+        "caveats": [
+            "A Census-reported long-term condition, not a clinical "
+            "prevalence estimate.",
+            "Respondents could mark more than one long-term health condition, so this is not "
+            "mutually exclusive with the other Census health indicators.",
+            "Not age-standardised: differences in age structure affect comparisons.",
+            SMALL_DENOMINATOR_CAVEAT,
+        ],
+        "source": ABS_CENSUS_SOURCE,
+    },
+    "stroke_pct": {
+        "label": "Census-reported stroke",
+        "shortLabel": "Stroke",
+        "denominatorLabel": "usual residents",
+        "category": "health",
+        "mapLayer": True,
+        "isDefaultMapLayer": False,
+        "colorScale": "sequential",
+        "description": (
+            "Share of usual residents who told the Census they have been diagnosed with stroke "
+            "by a doctor or nurse."
+        ),
+        "definition": (
+            'Usual residents reporting "Stroke" as a long-term health condition in the 2021 '
+            "Census, out of all usual residents."
+        ),
+        "caveats": [
+            "A Census-reported long-term condition, not a clinical "
+            "prevalence estimate.",
+            "Not age-standardised: towns with older populations will tend to show higher rates.",
+            "Respondents could mark more than one long-term health condition, so this is not "
+            "mutually exclusive with the other Census health indicators.",
+            SMALL_DENOMINATOR_CAVEAT,
+        ],
+        "source": ABS_CENSUS_SOURCE,
+    },
+    "dementia_pct": {
+        "label": "Census-reported dementia",
+        "shortLabel": "Dementia",
+        "denominatorLabel": "usual residents",
+        "category": "health",
+        "mapLayer": True,
+        "isDefaultMapLayer": False,
+        "colorScale": "sequential",
+        "description": (
+            "Share of usual residents who told the Census they have been diagnosed with "
+            "dementia by a doctor or nurse."
+        ),
+        "definition": (
+            'Usual residents reporting "Dementia (including Alzheimer\'s)" as a long-term health '
+            "condition in the 2021 Census, out of all usual residents."
+        ),
+        "caveats": [
+            "A Census-reported long-term condition that includes Alzheimer's; not a clinically "
+            "diagnosed or measured prevalence estimate.",
+            "Not age-standardised: towns with older populations will tend to show higher rates, "
+            "and dementia is strongly age-related.",
+            "Respondents could mark more than one long-term health condition, so this is not "
+            "mutually exclusive with the other Census health indicators.",
             SMALL_DENOMINATOR_CAVEAT,
         ],
         "source": ABS_CENSUS_SOURCE,
@@ -217,9 +433,8 @@ INDICATORS = {
 }
 
 # PHIDU hospital-services context (scripts/build_phidu_context.py). Deliberately not in INDICATORS:
-# these are Population Health Area estimates allocated to towns, so they get no town distributions,
-# no map layer and no entry in indicators.json. Shown only in the town panel's "Hospital services:
-# broader-area context" section, from public/data/hospital_context.json.
+# these are Population Health Area estimates allocated to towns. No town distributions or
+# allocated counts. Separate SR-only map layers and panel context read hospital_context.json.
 PHIDU_ATTRIBUTION = "Public Health Information Development Unit (PHIDU), Torrens University Australia"
 HOSPITAL_CONTEXT = {
     "public_admissions": {
@@ -261,5 +476,5 @@ HOSPITAL_CONTEXT_STATUS_TEXT = {
     ),
 }
 
-# The neutral default map layer is categorical, not one of the percentage indicators above.
-DEFAULT_MAP_LAYER = "remoteness_name"
+# All towns uses a neutral colour; point area encodes population on every layer.
+DEFAULT_MAP_LAYER = "all_towns"

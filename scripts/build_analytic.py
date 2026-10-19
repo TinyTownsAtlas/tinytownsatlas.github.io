@@ -13,9 +13,11 @@ logic as the paper's pipeline (Diabetology `Data/Scripts/import_census.py` and
   - 2021 Remoteness Area from the official ABS SA1-to-RA and SA1-to-UCL allocation files. A UCL
     must lie wholly within one Remoteness Area; anything else stops the build.
   - Indicator counts/denominators from the same workbook columns as the published dataset.
-  - Atlas-only indicators not in the published dataset (Census-reported cancer and the
-    conventional unemployment rate, unemployed / labour force) are read from the same workbook,
-    with their column header and Census table-block labels checked.
+  - Atlas-only indicators not in the published dataset (the nine other Census long-term health
+    conditions under LTHP - cancer, asthma, arthritis, mental health condition, heart disease,
+    lung condition, kidney disease, stroke, dementia - and the conventional unemployment rate,
+    unemployed / labour force) are read from the same workbook, with their column header and
+    Census table-block labels checked.
 
 Verification: restricted to population >= 200, the output must reproduce the 1,743 published
 Zenodo UCLs exactly (same codes, population, counts, denominators, state and Remoteness Area).
@@ -85,8 +87,18 @@ POPULATION_COLUMN = (4, "Tot_P_P")
 # Atlas indicator stem -> (numerator columns summed, denominator column).
 INDICATOR_COLUMNS: dict[str, tuple[list[tuple[int, str]], tuple[int, str]]] = {
     "diabetes": ([(24, "P_Diabetes_Tot")], (25, "Tot_P_P")),
-    # Census long-term health condition "Cancer (including remission)" (LTHP), usual residents.
+    # The following nine stems are the other Census long-term health conditions (LTHP block,
+    # 2021 Census - counting persons, place of usual residence), one tick-box each; see
+    # DATA_CONTRACT.md. None are in the published Zenodo dataset.
     "cancer": ([(16, "P_Cancer_Tot")], (17, "Tot_P_P")),
+    "asthma": ([(12, "P_Asthma_Tot")], (13, "Tot_P_P")),
+    "arthritis": ([(8, "P_Arthritis_Tot")], (9, "Tot_P_P")),
+    "mental_health": ([(40, "P_Mental_health_cond_Tot")], (41, "Tot_P_P")),
+    "heart_disease": ([(28, "P_Heart_disease_Tot")], (29, "Tot_P_P")),
+    "lung_condition": ([(36, "P_Lung_cond_Tot")], (37, "Tot_P_P")),
+    "kidney_disease": ([(32, "P_Kidney_disease_Tot")], (33, "Tot_P_P")),
+    "stroke": ([(44, "P_Stroke_Tot")], (45, "Tot_P_P")),
+    "dementia": ([(20, "P_Dementia_Tot")], (21, "Tot_P_P")),
     "indigenous": ([(449, "Indigenous population")], (450, "Tot_P_P")),
     "degree": (
         [
@@ -190,6 +202,14 @@ def check_sections(sections: tuple[object, ...]) -> None:
             raise SystemExit(f"Workbook column {column}: expected table block {label!r}, found {actual!r}")
         if "counting persons, place of usual residence" not in actual:
             raise SystemExit(f"Workbook column {column}: table block is not counted by place of usual residence")
+    expected_lthp = "LTHP Type of Long-term Health Condition 2021 Census - counting persons, place of usual residence"
+    # Normalize only whitespace; punctuation and wording remain source-accurate.
+    actual_lthp = " ".join(str(sections[8]).split())
+    if actual_lthp != expected_lthp:
+        raise SystemExit(f"LTHP block changed: {actual_lthp!r}")
+    for column in range(9, 48):
+        if sections[column] is not None and str(sections[column]).strip():
+            raise SystemExit(f"Unexpected block within LTHP at column {column}: {sections[column]!r}")
 
 
 def check_headers(header: tuple[object, ...]) -> None:
@@ -353,9 +373,16 @@ def main() -> None:
             "specialRecords": "name matches /Remainder|Migratory|No usual address/i (cross-checked against codes x31001/x79997/x99994)",
             "remoteness": "UCL must lie wholly within one 2021 Remoteness Area (ABS SA1 allocation)",
             "atlasOnlyIndicators": (
-                "cancer = P_Cancer_Tot / Tot_P_P (LTHP, 'Cancer (including remission)'); "
+                "Nine Census long-term health conditions (LTHP block, each numerator / Tot_P_P): "
+                "cancer = P_Cancer_Tot ('Cancer (including remission)'); asthma = P_Asthma_Tot; "
+                "arthritis = P_Arthritis_Tot; mental_health = P_Mental_health_cond_Tot "
+                "('Mental health condition (including depression or anxiety)'); "
+                "heart_disease = P_Heart_disease_Tot ('Heart disease (including heart attack or "
+                "angina)'); lung_condition = P_Lung_cond_Tot ('Lung condition (including COPD or "
+                "emphysema)'); kidney_disease = P_Kidney_disease_Tot; stroke = P_Stroke_Tot; "
+                "dementia = P_Dementia_Tot (\"Dementia (including Alzheimer's)\"). Plus "
                 "unemployment_rate = Unemployed / Labour force participation (LFSP labour force). "
-                "Not in the published Zenodo dataset, so not part of the reproduction check."
+                "None are in the published Zenodo dataset, so none are part of the reproduction check."
             ),
         },
         "counts": {

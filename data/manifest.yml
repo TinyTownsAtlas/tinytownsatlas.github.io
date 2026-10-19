@@ -44,6 +44,16 @@ indicators_added_2026_10:
   - "cancer_pct: Census-reported cancer (including remission), P_Cancer_Tot / Tot_P_P (LTHP block)"
   - "unemployment_rate_pct: unemployed / labour force (LFSP block); replaces the displayed unemployed_residents_pct (unemployed / all usual residents)"
 
+ux2_census_health_conditions:
+  source_block: LTHP Type of Long-term Health Condition, 2021 Census, place of usual residence
+  numerator_headers: P_Diabetes_Tot, P_Cancer_Tot, P_Asthma_Tot, P_Arthritis_Tot, P_Mental_health_cond_Tot, P_Heart_disease_Tot, P_Lung_cond_Tot, P_Kidney_disease_Tot, P_Stroke_Tot, P_Dementia_Tot
+  denominator_header: Tot_P_P
+  definitions: https://www.abs.gov.au/census/guide-census-data/census-dictionary/2021/variables-topic/health/type-long-term-health-condition-lthp
+  note: Census-reported long-term conditions, not clinical prevalence; not age-standardised.
+
+default_map_layer: all_towns
+point_area: proportional to usual-resident population on every map layer
+
 excluded_from_v0_1:
   - Brewarrina/Ten4Ten participant screening data
   - confidential Ten4Ten community reports

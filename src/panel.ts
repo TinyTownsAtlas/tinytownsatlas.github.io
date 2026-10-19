@@ -8,10 +8,12 @@ import {
 } from "./data";
 import { describeStandardisedRatio, formatCount, formatPercent, formatPopulation } from "./format";
 import { renderDistributionStrip } from "./charts";
+import { HOSPITAL_KEYS, sharedHospitalTowns } from "./layers";
 
 export interface PanelOptions {
   /** Health indicator key to show in the Health section. */
   outcome: string;
+  layer: string;
   onOutcomeChange: (key: string) => void;
 }
 
@@ -21,9 +23,11 @@ export function renderTownPanel(root: HTMLElement, data: AtlasData, town: Town, 
 
   const outcomes = healthIndicators(data);
   const selected = outcomes.find((i) => i.key === opts.outcome) ?? outcomes[0];
+  const hospitalActive = (HOSPITAL_KEYS as readonly string[]).includes(opts.layer);
+  if (hospitalActive) root.appendChild(renderHospitalSection(data, town, opts.layer));
   root.appendChild(renderHealthSection(data, town, outcomes, selected, opts.onOutcomeChange));
   root.appendChild(renderContextSection(data, town));
-  root.appendChild(renderHospitalSection(data, town));
+  if (!hospitalActive) root.appendChild(renderHospitalSection(data, town));
   root.appendChild(renderAboutDrawer(data));
 }
 
@@ -62,46 +66,25 @@ function renderHealthSection(
   headingRow.innerHTML = `<h3 id="health-heading">Health</h3><span class="section-source">2021 Census</span>`;
   section.appendChild(headingRow);
 
-  // Outcome selector: a small segmented control (ARIA tabs) generated from the health indicators.
-  const tabs = document.createElement("div");
-  tabs.className = "outcome-tabs";
-  tabs.setAttribute("role", "tablist");
-  tabs.setAttribute("aria-label", "Health outcome");
-  const buttons: HTMLButtonElement[] = outcomes.map((indicator) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "outcome-tab";
-    button.id = `outcome-tab-${indicator.key}`;
-    button.setAttribute("role", "tab");
-    button.setAttribute("aria-controls", "outcome-panel");
-    const isSelected = indicator.key === selected.key;
-    button.setAttribute("aria-selected", String(isSelected));
-    button.tabIndex = isSelected ? 0 : -1;
-    button.textContent = indicator.shortLabel;
-    button.addEventListener("click", () => {
-      if (indicator.key !== selected.key) onOutcomeChange(indicator.key);
-    });
-    return button;
+  // Native select stays usable with ten conditions on small screens.
+  const selector = document.createElement("select");
+  selector.id = "health-outcome";
+  selector.className = "health-outcome";
+  selector.setAttribute("aria-label", "Health outcome");
+  for (const indicator of outcomes) {
+    const option = document.createElement("option");
+    option.value = indicator.key; option.textContent = indicator.shortLabel;
+    selector.appendChild(option);
+  }
+  selector.value = selected.key;
+  selector.addEventListener("change", () => {
+    onOutcomeChange(selector.value);
+    document.getElementById("health-outcome")?.focus();
   });
-  tabs.addEventListener("keydown", (e) => {
-    const current = buttons.findIndex((b) => b === document.activeElement);
-    if (current < 0) return;
-    let next = current;
-    if (e.key === "ArrowRight") next = (current + 1) % buttons.length;
-    else if (e.key === "ArrowLeft") next = (current - 1 + buttons.length) % buttons.length;
-    else return;
-    e.preventDefault();
-    onOutcomeChange(outcomes[next].key);
-    document.getElementById(buttons[next].id)?.focus();
-  });
-  tabs.append(...buttons);
-  section.appendChild(tabs);
-
+  section.appendChild(selector);
   const panel = document.createElement("div");
   panel.id = "outcome-panel";
   panel.className = "outcome-panel";
-  panel.setAttribute("role", "tabpanel");
-  panel.setAttribute("aria-labelledby", `outcome-tab-${selected.key}`);
 
   const value = Number(town[selected.key]);
   const numerator = Number(town[selected.numeratorField]);
@@ -180,22 +163,20 @@ function renderContextSection(data: AtlasData, town: Town): HTMLElement {
 
 /**
  * PHIDU hospital estimates for the wider Population Health Area. Shown as area context with the
- * geography stated first; no town distributions, no map layer, no allocated counts.
+ * geography stated first; no town distributions or allocated counts.
  */
-function renderHospitalSection(data: AtlasData, town: Town): HTMLElement {
+function renderHospitalSection(data: AtlasData, town: Town, activeKey?: string): HTMLElement {
   const hospital = data.hospital;
   const entry = hospital.towns[town.ucl_code];
   const section = document.createElement("section");
   section.className = "panel-section hospital-section";
   section.setAttribute("aria-labelledby", "hospital-heading");
 
-  const others = entry.sharedUclCount - 1;
-  const anyPublished = Object.values(entry.values).some((v) => v.status === "available");
-  const sharing = !anyPublished
-    ? ""
-    : others > 0
-      ? ` ${others} other ${others === 1 ? "town or locality" : "towns and localities"} in the PHIDU data show the same values.`
-      : " No other town in the PHIDU data has the same values.";
+  const measureKey = activeKey ?? "public_admissions";
+  const peers = sharedHospitalTowns(data, town.ucl_code, measureKey);
+  const sharing = entry.phaCode && entry.values[measureKey]?.status === "available"
+    ? ` ${peers.length} other Atlas ${peers.length === 1 ? "town shares" : "towns share"} this published measure and supplied PHA.${activeKey && peers.length ? " Their points are outlined on the map; the outlines do not mark an area boundary." : ""}`
+    : "";
   const areaNote = entry.phaName
     ? `Not measured for ${escapeHtml(town.ucl_name)}. These are PHIDU estimates for the
        <strong>${escapeHtml(entry.phaName)}</strong> Population Health Area, assigned to towns in
@@ -203,8 +184,12 @@ function renderHospitalSection(data: AtlasData, town: Town): HTMLElement {
     : `Not measured for ${escapeHtml(town.ucl_name)}. PHIDU produced these estimates from
        Population Health Area data but did not identify the area for this town, so its name and
        boundary are not shown.${sharing}`;
+  const values = Object.values(entry.values);
+  const commonMissing = values.every((v) => v.status !== "available" && v.status === values[0].status)
+    ? hospital.statusText[values[0].status as keyof typeof hospital.statusText] : null;
 
   const rows = Object.entries(hospital.indicators)
+    .sort(([a], [b]) => Number(b === activeKey) - Number(a === activeKey))
     .map(([key, meta]) => {
       const value = entry.values[key];
       const valueHtml =
@@ -212,7 +197,7 @@ function renderHospitalSection(data: AtlasData, town: Town): HTMLElement {
           ? `<span class="hospital-sr">${Math.round(value.sr)}</span>
              <span class="hospital-benchmark">Australia = 100</span>
              <span class="indicator-denominator">${escapeHtml(describeStandardisedRatio(value.sr))}</span>`
-          : `<span class="hospital-missing">${escapeHtml(hospital.statusText[value.status as keyof typeof hospital.statusText])}</span>`;
+          : `<span class="hospital-missing">${escapeHtml(commonMissing ? "No published interpretable ratio" : hospital.statusText[value.status as keyof typeof hospital.statusText])}</span>`;
       return `
         <div class="hospital-row" data-hospital="${escapeHtml(key)}">
           <div class="hospital-row-label">${escapeHtml(meta.label)}<span class="hospital-period">${escapeHtml(meta.period)}</span></div>
@@ -224,17 +209,19 @@ function renderHospitalSection(data: AtlasData, town: Town): HTMLElement {
 
   section.innerHTML = `
     <div class="section-heading-row">
-      <h3 id="hospital-heading">Hospital services: broader-area context</h3>
+      <h3 id="hospital-heading">${activeKey ? "Broader-area health service estimate" : "Hospital services: broader-area context"}</h3>
     </div>
     <p class="hospital-area-note">${areaNote}</p>
+    ${commonMissing ? `<p class="indicator-definition">${escapeHtml(commonMissing)}</p>` : ""}
     ${rows}
+    <details class="hospital-notes"><summary>Measure notes and interpretation</summary>
     <ul class="indicator-caveats" aria-label="Interpretation notes">${hospital.caveats
       .map((c) => `<li>${escapeHtml(c)}</li>`)
       .join("")}</ul>
     <p class="hospital-licence">Source: ${escapeHtml(hospital.licence.attribution)}. Hospital data from
       the Australian Institute of Health and Welfare on behalf of state and territory health
       departments. This extract is licensed
-      <a href="${escapeHtml(hospital.licence.url)}" target="_blank" rel="noopener">${escapeHtml(hospital.licence.name)}</a>.</p>
+      <a href="${escapeHtml(hospital.licence.url)}" target="_blank" rel="noopener">${escapeHtml(hospital.licence.name)}</a>.</p></details>
   `;
   return section;
 }

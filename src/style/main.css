@@ -29,6 +29,7 @@ body {
   display: grid;
   grid-template-rows: auto 1fr;
   height: 100vh;
+  height: 100dvh;
 }
 
 #topbar {
@@ -146,6 +147,13 @@ body {
   margin-bottom: 0.3rem;
 }
 
+.scope-note { margin: 0.35rem 0 0; font-size: 0.72rem; color: var(--color-muted); }
+.population-legend { margin-bottom: 0.6rem; }
+.population-legend:last-child { margin-bottom: 0; }
+.population-samples { display: flex; align-items: end; gap: 1rem; }
+.population-sample { display: grid; justify-items: center; align-content: end; gap: 0.2rem; min-height: 36px; }
+.population-dot { border: 1px solid white; border-radius: 50%; box-sizing: content-box; opacity: 0.85; }
+
 .legend-row {
   display: flex;
   align-items: center;
@@ -153,7 +161,7 @@ body {
   margin: 0.15rem 0;
 }
 
-/* Drawn like the map dots (radius 4, 1px white stroke, 0.85 opacity; see DOT_STYLE in map.ts),
+/* Colour-key swatches use the map stroke/opacity; population sizes have their own legend,
    with a faint outline so the white stroke is visible on the legend's white background. */
 .legend-swatch {
   flex: none;
@@ -299,41 +307,21 @@ body {
   color: var(--color-muted);
 }
 
-/* Health outcome selector: a compact segmented control. */
-.outcome-tabs {
-  display: inline-flex;
+/* Native selectors support the full set of health conditions. */
+.health-outcome, #layer-select {
+  font: inherit;
+  font-size: 0.85rem;
+  min-height: 36px;
   max-width: 100%;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 2px;
-  gap: 2px;
-  background: #f6f7f8;
-  margin-bottom: 0.75rem;
-}
-
-.outcome-tab {
-  font: inherit;
-  font-size: 0.8rem;
-  border: 0;
   border-radius: 4px;
-  background: transparent;
-  color: var(--color-muted);
-  padding: 0.3rem 0.8rem;
-  cursor: pointer;
-  min-height: 32px;
+  background: white;
+  padding: 0.3rem 0.5rem;
 }
-
-.outcome-tab[aria-selected="true"] {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-}
-
-.outcome-tab:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 1px;
-}
+.health-outcome { width: 100%; margin-bottom: 0.75rem; }
+.hospital-notes { font-size: 0.75rem; margin-top: 0.7rem; }
+.hospital-notes summary { cursor: pointer; }
+[hidden] { display: none !important; }
 
 .outcome-label {
   font-size: 0.85rem;
@@ -542,7 +530,7 @@ body {
     left: 0;
     right: 0;
     width: auto;
-    height: 45vh;
+    height: 68dvh;
     border-left: none;
     border-top: 1px solid var(--color-border);
     border-radius: 14px 14px 0 0;
@@ -559,8 +547,9 @@ body {
   #panel-handle {
     display: block;
     width: 40px;
-    height: 4px;
-    background: var(--color-border);
+    height: 24px;
+    border: 0;
+    background: linear-gradient(var(--color-border), var(--color-border)) center / 40px 4px no-repeat;
     border-radius: 2px;
     margin: 0.4rem auto 0.5rem;
     cursor: pointer;
@@ -570,3 +559,6 @@ body {
     top: 0.5rem;
   }
 }
+
+body.panel-open #intro-blurb { display: none; }
+#panel-content { overflow-wrap: anywhere; }

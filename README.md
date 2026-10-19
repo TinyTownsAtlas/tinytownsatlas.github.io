@@ -7,14 +7,25 @@ for the full project brief and [`ARCHITECTURE.md`](ARCHITECTURE.md) /
 [`DATA_CONTRACT.md`](DATA_CONTRACT.md) / [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for
 how it's built.
 
-Health outcomes (opt-in map layers and the town panel's Health section): Census-reported diabetes
-and Census-reported cancer (including remission). Both are 2021 Census long-term conditions, not
-clinical or registry measures, and not age-standardised. Each town profile also has a separate
-"Hospital services: broader-area context" section with PHIDU standardised ratios for public
-hospital admissions (2022/23) and potentially preventable hospitalisations (2020/21). These are
-Population Health Area estimates, not town observations, so they have no distributions or map
-layer (see `DATA_CONTRACT.md`). Unemployment is shown as the conventional Census rate (unemployed /
-labour force), which matches ABS QuickStats for the same UCL.
+The default **All towns** map shows 1,208 towns in one neutral colour. Point area represents
+population on **every** layer (100–1,499 usual residents); the map control states this scope and a
+compact size legend shows 100, 500, 1,000 and 1,499 residents. Colour represents the chosen measure.
+The native grouped picker offers ten Census long-term conditions: Diabetes, Cancer, Asthma,
+Arthritis, Mental health, Heart disease, Lung condition, Kidney disease, Stroke and Dementia.
+Full ABS definitions, numerators/denominators, national and same-remoteness distributions and
+interpretation notes remain in the panel. These are Census reports, not clinical prevalence or
+age-standardised measures. Remoteness (ABS) is optional under Geography: geographic accessibility,
+not town population.
+
+Hospital admissions (2022/23, excluding same-day dialysis) and Preventable hospitalisations
+(2020/21) are separate **PHA-derived broader-area** map layers, using indirectly age-standardised
+ratios (Australia = 100), never allocated town counts. A blue–neutral–brown log-ratio scale has
+stops at 50, 100 and 200; colours saturate outside those endpoints and the legend says so. Missing
+and suppressed values stay neutral. Selecting either hospital layer surfaces hospital context
+immediately below the town header. Only peers with the same supplied PHA code and an available
+selected measure receive an outline; no inferred area boundaries or PHA names. Hospital data keep
+their separate PHIDU CC BY-NC-SA licence and have no town comparison distributions.
+Unemployment remains unemployed / labour force, matching Census QuickStats for the same UCL.
 
 The 100-resident lower bound is a Tiny Towns Atlas product definition, not an ABS definition of a
 town. The published diabetes paper this Atlas builds on used 200 residents; the Atlas lowered the
@@ -49,6 +60,7 @@ python scripts/build_phidu_context.py  # PHIDU hospital workbook + PHA flags -> 
 python scripts/build_geometry.py   # needs the ABS UCL 2021 GDA2020 shapefile, see the script's docstring
 python scripts/build_data.py
 python scripts/validate.py         # QA checks; exits non-zero on failure
+python -m unittest discover -s scripts -p "test_*.py"  # source/header and output regression tests
 npm test                           # unit tests (search, layers/legend, URL state, formatting)
 ```
 
@@ -57,7 +69,8 @@ npm test                           # unit tests (search, layers/legend, URL stat
 
 To add another Census health outcome: add its workbook columns to `INDICATOR_COLUMNS` in
 `build_analytic.py` (with header labels), add metadata with `category: "health"` and
-`mapLayer: True` in `scripts/indicator_defs.py`, and rebuild. The panel selector, map layer
+`mapLayer: True` in `scripts/indicator_defs.py`, and rebuild. Verify the full category wording in the ABS Census dictionary and add independent
+source anchors/tests. The panel selector, map layer
 picker and legend are generated from `indicators.json`; no frontend changes are needed.
 
 ## Sources and licensing
@@ -88,3 +101,9 @@ This atlas deliberately does not produce rankings, performance scores, league ta
 residuals. See `DATA_CONTRACT.md` ("Fields that must never be treated as rankings") and
 `../00_handoff/PROJECT_BRIEF.md` ("Governance constraints") before adding any new indicator or
 view.
+
+## Local build troubleshooting
+
+If Dropbox prevents Vite from clearing `dist/assets`, use
+`npm run build -- --emptyOutDir false`; Vite emits a new hashed bundle and updates `dist/index.html`
+without deleting locked directories. This flag is a local workaround, not a deployment change.

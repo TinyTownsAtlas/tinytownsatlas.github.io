@@ -79,8 +79,7 @@ export function communityBadgeText(tag: CommunityTag, uclCode: string): string {
 
 /**
  * PHIDU hospital-services context (public/data/hospital_context.json): Population Health Area
- * estimates assigned to towns. Separate licence (CC BY-NC-SA 3.0 AU); never a distribution or map
- * layer, and no allocated counts.
+ * estimates assigned to towns. Separate licence (CC BY-NC-SA 3.0 AU); no town distributions or allocated counts. Map layers use SR only.
  */
 export type HospitalStatus = "available" | "suppressed" | "not_available" | "not_interpretable";
 

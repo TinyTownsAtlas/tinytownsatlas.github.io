@@ -17,7 +17,7 @@ async function main(): Promise<void> {
   const normalize = (s: AppState): AppState => ({
     selectedUclCode: s.selectedUclCode && data.townsByCode.has(s.selectedUclCode) ? s.selectedUclCode : null,
     layer: resolveLayer(mapLayers, s.layer).key,
-    outcome: healthKeys.has(s.outcome) ? s.outcome : defaultOutcome,
+    outcome: healthKeys.has(s.layer) ? s.layer : healthKeys.has(s.outcome) ? s.outcome : defaultOutcome,
   });
   const store = new StateStore(readStateFromUrl(), normalize);
   writeStateToUrl(store.get(), false); // drop invalid params from the address bar
@@ -32,14 +32,19 @@ async function main(): Promise<void> {
   const legendEl = document.getElementById("legend") as HTMLElement;
   const mapContainer = document.getElementById("map") as HTMLElement;
 
-  layerSelect.replaceChildren(
-    ...mapLayers.map((layer) => {
+  layerSelect.replaceChildren();
+  for (const [label, kinds] of [["", ["neutral"]], ["Health conditions", ["sequential"]],
+    ["Health services", ["hospital"]], ["Geography", ["categorical"]]] as const) {
+    const group = label ? document.createElement("optgroup") : layerSelect;
+    if (group instanceof HTMLOptGroupElement) group.label = label;
+    for (const layer of mapLayers.filter((l) => (kinds as readonly string[]).includes(l.kind))) {
       const option = document.createElement("option");
       option.value = layer.key;
       option.textContent = layer.optionLabel;
-      return option;
-    }),
-  );
+      group.appendChild(option);
+    }
+    if (label) layerSelect.appendChild(group);
+  }
 
   const initialLayer = resolveLayer(mapLayers, store.get().layer);
   const atlasMap = createMap(mapContainer, data, initialLayer, (uclCode) => {
@@ -57,19 +62,25 @@ async function main(): Promise<void> {
     renderLegend(legendEl, layer);
   }
 
+  let shownPanelKey = "";
   function showPanel(state: AppState): void {
     const town = state.selectedUclCode ? data.townsByCode.get(state.selectedUclCode) : undefined;
     if (!town) {
       panelEl.hidden = true;
       document.body.classList.remove("panel-open", "panel-expanded");
+      panelHandleEl.setAttribute("aria-expanded", "false");
       atlasMap.setSelected(null);
       return;
     }
     renderTownPanel(panelContentEl, data, town, {
       outcome: state.outcome,
-      onOutcomeChange: (key) => store.setOutcome(key),
+      layer: state.layer,
+      onOutcomeChange: (key) => healthKeys.has(state.layer) ? store.setLayer(key, { healthKeys }) : store.setOutcome(key),
     });
     panelEl.hidden = false;
+    const panelKey = `${town.ucl_code}:${state.layer}:${state.outcome}`;
+    if (shownPanelKey !== panelKey) panelEl.scrollTop = 0;
+    shownPanelKey = panelKey;
     document.body.classList.add("panel-open");
     atlasMap.setSelected(town.ucl_code);
   }
@@ -88,11 +99,12 @@ async function main(): Promise<void> {
     shownTown = state.selectedUclCode;
   });
 
-  panelCloseEl.addEventListener("click", () => store.selectTown(null, { pushHistory: false }));
+  panelCloseEl.addEventListener("click", () => store.selectTown(null));
 
   // Mobile bottom-sheet: tap the handle to toggle peek/expanded.
   panelHandleEl.addEventListener("click", () => {
-    document.body.classList.toggle("panel-expanded");
+    const expanded = document.body.classList.toggle("panel-expanded");
+    panelHandleEl.setAttribute("aria-expanded", String(expanded));
   });
 
   layerSelect.addEventListener("change", () => {

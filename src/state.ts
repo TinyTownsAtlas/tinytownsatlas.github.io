@@ -1,12 +1,12 @@
 export interface AppState {
   selectedUclCode: string | null;
-  /** Map colour layer key (remoteness or an opt-in health indicator). */
+  /** Map colour layer key (All towns, Census condition, hospital SR or remoteness). */
   layer: string;
   /** Health outcome shown in the town panel (a health indicator key). */
   outcome: string;
 }
 
-export const DEFAULT_LAYER = "remoteness_name";
+export const DEFAULT_LAYER = "all_towns";
 export const DEFAULT_OUTCOME = "diabetes_pct";
 
 /** Parse URL search params. Unknown values are resolved against the loaded data by the caller. */
@@ -71,7 +71,7 @@ export class StateStore {
   setLayer(layer: string, opts: { healthKeys?: Set<string> } = {}): void {
     const outcome = opts.healthKeys?.has(layer) ? layer : this.state.outcome;
     this.state = this.normalize({ ...this.state, layer, outcome });
-    writeStateToUrl(this.state, false);
+    writeStateToUrl(this.state, true);
     this.notify();
   }
 

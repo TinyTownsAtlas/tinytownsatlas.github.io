@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-12T22:49:32+00:00",
+  "generatedAt": "2026-10-19T01:47:24+00:00",
   "sources": [
     {
       "name": "ABS 2021 Census of Population and Housing (TableBuilder), UCL extract supplied by PHIDU",
@@ -34,7 +34,7 @@
   "primaryMaxPopulation": 1499,
   "primaryCount": 1208,
   "referenceCount": 1803,
-  "defaultMapLayer": "remoteness_name",
+  "defaultMapLayer": "all_towns",
   "remotenessOrder": [
     "Major Cities of Australia",
     "Inner Regional Australia",
