@@ -24,6 +24,7 @@ export function createMap(
   data: AtlasData,
   initialLayer: MapLayer,
   onSelect: (uclCode: string) => void,
+  onBlankClick: () => void = () => {},
 ): AtlasMap {
   const map = new maplibregl.Map({
     container,
@@ -142,6 +143,11 @@ export function createMap(
       if (!feature) return;
       const code = (feature.properties as { ucl_code: string }).ucl_code;
       onSelect(code);
+    });
+
+    // A tap that lands on no town (the layer handler above handles town hits).
+    map.on("click", (e) => {
+      if (map.queryRenderedFeatures(e.point, { layers: ["towns-hit"] }).length === 0) onBlankClick();
     });
 
     map.on("mouseenter", "towns-hit", () => {

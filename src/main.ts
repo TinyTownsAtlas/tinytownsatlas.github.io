@@ -4,7 +4,7 @@ import { DEFAULT_OUTCOME, StateStore, readStateFromUrl, writeStateToUrl, type Ap
 import { createMap } from "./map";
 import { renderTownPanel } from "./panel";
 import { renderLegend } from "./legend";
-import { initSheet } from "./sheet";
+import { initSheet, SHEET_MEDIA_QUERY } from "./sheet";
 import { getMapLayers, resolveLayer } from "./layers";
 
 async function main(): Promise<void> {
@@ -50,6 +50,9 @@ async function main(): Promise<void> {
   const initialLayer = resolveLayer(mapLayers, store.get().layer);
   const atlasMap = createMap(mapContainer, data, initialLayer, (uclCode) => {
     store.selectTown(uclCode);
+  }, () => {
+    // Mobile only: tapping empty map closes the profile. Desktop keeps the side panel open.
+    if (window.matchMedia(SHEET_MEDIA_QUERY).matches && store.get().selectedUclCode) store.selectTown(null);
   });
 
   // Development-only handle for browser smoke tests (removed from production builds).

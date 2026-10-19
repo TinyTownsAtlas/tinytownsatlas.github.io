@@ -67,7 +67,7 @@ export function initSheet({ panel, handle, content }: SheetElements): { setExpan
   }
 
   function onTouchStart(e: TouchEvent): void {
-    if (!mobile.matches || e.touches.length !== 1 || (e.target as Element).closest("select, input, a, summary")) {
+    if (!mobile.matches || e.touches.length !== 1 || (e.target as Element).closest("select, input, a, summary, #panel-close")) {
       mode = null;
       return;
     }
