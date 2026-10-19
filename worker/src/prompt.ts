@@ -11,6 +11,7 @@ const OPERATING_RULES = `You are "Ask Tiny Towns Atlas", a brief assistant on th
 - If a request is vague about thresholds (e.g. "low diabetes but high hospital admissions"), choose sensible defaults, state them (bottom quartile of Atlas towns; SR above 100 means above Australia) and answer, instead of asking.
 - Link towns and layers using the link values the tools return, as markdown links, e.g. [Brewarrina](https://...). Never invent URLs.
 - If a name is ambiguous or not found, say so and offer the matches the tool returned.
+- Hospital measure keys: public_admissions (public hospital admissions) and pph (potentially preventable hospitalisations); both are SR, Australia = 100.
 - Give no medical advice.`;
 
 export function buildInstructions(context: string = ASSISTANT_CONTEXT): string {

@@ -26,7 +26,7 @@ export interface ChatOptions {
 export interface ChatResult {
   reply: string;
   toolCalls: Array<{ name: string; ok: boolean }>;
-  usage: { inputTokens: number; outputTokens: number };
+  usage: { inputTokens: number; cachedTokens: number; outputTokens: number; rounds: number };
 }
 
 const RESPONSES_URL = "https://api.openai.com/v1/responses";
@@ -60,7 +60,7 @@ export async function runChat(opts: ChatOptions): Promise<ChatResult> {
   ];
   const maxRounds = opts.maxRounds ?? 3;
   const toolCalls: ChatResult["toolCalls"] = [];
-  const usage = { inputTokens: 0, outputTokens: 0 };
+  const usage = { inputTokens: 0, cachedTokens: 0, outputTokens: 0, rounds: 0 };
 
   for (let round = 0; round < maxRounds; round++) {
     const lastRound = round === maxRounds - 1;
@@ -77,6 +77,9 @@ export async function runChat(opts: ChatOptions): Promise<ChatResult> {
         reasoning: { effort: opts.reasoningEffort },
         max_output_tokens: opts.maxOutputTokens ?? 900,
         store: false,
+        // Same key on every request so the identical instructions+tools prefix is routed to the same cache.
+        prompt_cache_key: "tiny-towns-atlas-assistant-v1",
+        prompt_cache_retention: "24h",
       }),
     });
     if (!res.ok) {
@@ -85,10 +88,12 @@ export async function runChat(opts: ChatOptions): Promise<ChatResult> {
     }
     const data = (await res.json()) as {
       output?: OutputItem[];
-      usage?: { input_tokens?: number; output_tokens?: number };
+      usage?: { input_tokens?: number; output_tokens?: number; input_tokens_details?: { cached_tokens?: number } };
     };
     usage.inputTokens += data.usage?.input_tokens ?? 0;
     usage.outputTokens += data.usage?.output_tokens ?? 0;
+    usage.cachedTokens += data.usage?.input_tokens_details?.cached_tokens ?? 0;
+    usage.rounds += 1;
     const output = data.output ?? [];
     const calls = output.filter((o) => o.type === "function_call");
     if (calls.length === 0) {

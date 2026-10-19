@@ -78,6 +78,8 @@ export async function handleRequest(request: Request, env: Env, fetchImpl: typeo
       index,
       fetchImpl,
     });
+    // Token counts only (no content), to watch cost and cache hits in `wrangler tail`.
+    console.log("usage", JSON.stringify({ ...result.usage, tools: result.toolCalls.length }));
     return json({ reply: result.reply, toolCalls: result.toolCalls.map((t) => t.name) }, 200, cors);
   } catch (err) {
     console.error("chat failed:", err instanceof Error ? err.message : "unknown error");

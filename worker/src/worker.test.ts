@@ -84,9 +84,17 @@ describe("tools and prompt", () => {
     });
   });
 
+  it("resolves every $ref inside its own tool schema", () => {
+    for (const t of buildTools(idx)) {
+      const refs = [...JSON.stringify(t.parameters.properties).matchAll(/#\/\$defs\/(\w+)/g)].map((m) => m[1]);
+      for (const r of refs) expect((t.parameters as any).$defs[r], `${t.name} ${r}`).toBeDefined();
+    }
+  });
+
   it("offers no tool or enum value for a composite measure or Aboriginal share sorting", () => {
     const rank: any = buildTools(idx).find((t) => t.name === "rank_towns");
-    expect(rank.parameters.properties.indicator.enum).not.toContain("indigenous_pct");
+    expect(rank.parameters.$defs.sortable.enum).not.toContain("indigenous_pct");
+    expect(rank.parameters.properties.indicator).toEqual({ $ref: "#/$defs/sortable" });
     expect(JSON.stringify(buildTools(idx))).not.toMatch(/composite_|overall_score|healthiest/);
   });
 
@@ -157,7 +165,7 @@ describe("runChat with a mocked model", () => {
     const r = await runChat({ apiKey: "test", model: "m", reasoningEffort: "low", messages: [{ role: "user", content: "x" }], index: idx, fetchImpl: impl });
     expect(r.reply).toBe("Done.");
     expect(r.toolCalls).toEqual([{ name: "rank_towns", ok: true }]);
-    expect(r.usage).toEqual({ inputTokens: 150, outputTokens: 30 });
+    expect(r.usage).toEqual({ inputTokens: 150, cachedTokens: 0, outputTokens: 30, rounds: 2 });
     expect(calls[0].store).toBe(false);
     expect(calls[0].max_output_tokens).toBeLessThanOrEqual(1000);
     expect(JSON.stringify(calls[0])).not.toContain("UCL115005"); // the dataset is never placed in the prompt
@@ -194,7 +202,7 @@ const post = (body: unknown, headers: Record<string, string> = { origin: "https:
 
 function routedFetch(openai: ReturnType<typeof fakeOpenAI>["impl"]): typeof fetch {
   return (async (url: any, init: any) =>
-    String(url).endsWith("assistant_index.json")
+    String(url).includes("assistant_index.json")
       ? new Response(JSON.stringify(idx), { status: 200 })
       : openai(url, init)) as typeof fetch;
 }
@@ -244,7 +252,7 @@ describe("handler", () => {
     const f = routedFetch(fakeOpenAI([]).impl);
     const limited = await handleRequest(post({ messages: [{ role: "user", content: "hi" }] }), { ...env, RATE_LIMITER: { limit: async () => ({ success: false }) } }, f);
     expect(limited.status).toBe(429);
-    const failing = (async (url: any) => (String(url).endsWith("assistant_index.json") ? new Response(JSON.stringify(idx)) : new Response("boom", { status: 500 }))) as typeof fetch;
+    const failing = (async (url: any) => (String(url).includes("assistant_index.json") ? new Response(JSON.stringify(idx)) : new Response("boom", { status: 500 }))) as typeof fetch;
     const res = await handleRequest(post({ messages: [{ role: "user", content: "Tell me about Wilcannia" }] }), env, failing);
     expect(res.status).toBe(502);
     expect(await res.text()).not.toContain("boom");

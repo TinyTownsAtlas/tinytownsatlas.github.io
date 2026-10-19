@@ -10,86 +10,99 @@ export interface ToolDefinition {
   strict: true;
 }
 
-const nullable = (schema: Record<string, unknown>) => ({
-  ...schema,
-  type: [schema.type as string, "null"],
-  ...(schema.enum ? { enum: [...(schema.enum as unknown[]), null] } : {}),
+const ref = (name: string) => ({ $ref: `#/$defs/${name}` });
+const orNull = (schema: Record<string, unknown>, description?: string) => ({
+  anyOf: [schema, { type: "null" }],
+  ...(description ? { description } : {}),
 });
 
 export function buildTools(idx: AtlasIndex): ToolDefinition[] {
   const sortable = [...Object.keys(idx.indicators).filter((k) => !DESCRIPTIVE_ONLY.has(k)), ...HOSPITAL_KEYS];
   const anyMeasure = [...Object.keys(idx.indicators), ...HOSPITAL_KEYS];
-  const measureHelp = Object.values(idx.indicators)
-    .map((i) => `${i.key} = ${i.shortLabel}`)
-    .concat(HOSPITAL_KEYS.map((k) => `${k} = ${idx.hospital.indicators[k].label} (SR, Australia = 100)`))
-    .join("; ");
-  const states = idx.states.map((s) => s.abbr);
-  const state = nullable({ type: "string", enum: states, description: "State or territory abbreviation filter, or null for all." });
-  const remoteness = nullable({ type: "string", enum: idx.remotenessOrder, description: "Remoteness class filter, or null." });
+  // Enum lists are defined once per tool schema and referenced, instead of repeated per property.
+  const defs = {
+    state: { type: "string", enum: idx.states.map((s) => s.abbr) },
+    remoteness: { type: "string", enum: idx.remotenessOrder },
+    measure: { type: "string", enum: anyMeasure },
+    sortable: { type: "string", enum: sortable },
+    census: { type: "string", enum: sortable.filter((k) => !(HOSPITAL_KEYS as string[]).includes(k)) },
+    direction: { type: "string", enum: ["highest", "lowest"] },
+  };
+  const used = (props: unknown) => {
+    const text = JSON.stringify(props);
+    return Object.fromEntries(Object.entries(defs).filter(([k]) => text.includes(`#/$defs/${k}"`)));
+  };
   const scope = {
-    state,
-    remoteness,
-    min_population: nullable({ type: "integer", description: "Minimum usual residents, or null." }),
-    max_population: nullable({ type: "integer", description: "Maximum usual residents, or null." }),
+    state: orNull(ref("state"), "State filter or null."),
+    remoteness: orNull(ref("remoteness"), "Remoteness filter or null."),
+    min_population: orNull({ type: "integer" }, "Minimum usual residents or null."),
+    max_population: orNull({ type: "integer" }, "Maximum usual residents or null."),
   };
   const fn = (name: string, description: string, properties: Record<string, unknown>): ToolDefinition => ({
     type: "function",
     name,
     description,
     strict: true,
-    parameters: { type: "object", properties, required: Object.keys(properties), additionalProperties: false },
+    parameters: {
+      type: "object",
+      properties,
+      required: Object.keys(properties),
+      additionalProperties: false,
+      $defs: used(properties),
+    },
   });
-  const townArg = { type: "string", description: "Town name, optionally with state (e.g. 'Laura QLD'), or a UCL code from the UI context." };
+  const townArg = { type: "string", description: "Town name, optionally with state (e.g. 'Laura QLD'), or a UCL code." };
+  const stateArg = orNull(ref("state"), "State filter or null.");
 
   return [
-    fn("find_town", "Look up Atlas towns by name, alias (e.g. King Island) or UCL code. Use when a name may be ambiguous.", {
+    fn("find_town", "Look up towns by name, alias (e.g. King Island) or UCL code.", {
       query: { type: "string" },
-      state,
+      state: stateArg,
     }),
-    fn("get_town_profile", `Full profile of one town: Census health conditions with counts and denominators, context indicators, hospital SR context and deep links. Measures: ${measureHelp}.`, {
+    fn("get_town_profile", "Profile of one town: Census conditions with counts and denominators, context indicators, hospital SR context.", {
       town: townArg,
-      state,
+      state: stateArg,
     }),
-    fn("compare_towns", "Compare 2-4 towns side by side on chosen measures. Use an empty indicators list for the default set (ten Census conditions plus both hospital measures).", {
-      towns: { type: "array", items: { type: "string" }, description: "2 to 4 town names (optionally with state)." },
-      indicators: { type: "array", items: { type: "string", enum: anyMeasure }, description: "Measure keys, or empty for the default set." },
+    fn("compare_towns", "Compare 2-4 towns on chosen measures; empty indicators gives the default set (ten conditions plus both hospital measures).", {
+      towns: { type: "array", items: { type: "string" } },
+      indicators: { type: "array", items: ref("measure") },
     }),
-    fn("rank_towns", `Sort towns on ONE measure (highest or lowest observed value), optionally within a state, remoteness class or population range. There is no overall or composite ranking. Measures: ${measureHelp}.`, {
-      indicator: { type: "string", enum: sortable },
-      direction: { type: "string", enum: ["highest", "lowest"] },
-      top_n: nullable({ type: "integer", description: `How many towns, 1-${MAX_TOP_N}. Null means 5.` }),
+    fn("rank_towns", "Sort towns on ONE measure, highest or lowest, optionally within state, remoteness or population range. No overall or composite ranking exists.", {
+      indicator: ref("sortable"),
+      direction: ref("direction"),
+      top_n: orNull({ type: "integer" }, `1-${MAX_TOP_N}; null means 5.`),
       ...scope,
     }),
-    fn("filter_towns", "List towns meeting every condition (AND). Use numeric thresholds, or top_quartile / bottom_quartile of the national Atlas distribution for Census measures. Empty conditions filter only by state, remoteness and population.", {
+    fn("filter_towns", "Towns meeting ALL conditions. Thresholds are percents (SR for hospital measures, Australia = 100); top_quartile/bottom_quartile use the national Atlas distribution (Census measures only; value null). Empty conditions filter only by scope.", {
       conditions: {
         type: "array",
         items: {
           type: "object",
           properties: {
-            indicator: { type: "string", enum: sortable },
+            indicator: ref("sortable"),
             op: { type: "string", enum: ["gt", "gte", "lt", "lte", "top_quartile", "bottom_quartile"] },
-            value: nullable({ type: "number", description: "Threshold (percent, or SR where Australia = 100); null for quartile ops." }),
+            value: orNull({ type: "number" }),
           },
           required: ["indicator", "op", "value"],
           additionalProperties: false,
         },
       },
-      sort_by: nullable({ type: "string", enum: sortable, description: "Measure to sort results by, or null for population." }),
-      sort_direction: nullable({ type: "string", enum: ["highest", "lowest"] }),
-      limit: nullable({ type: "integer", description: `Rows to return, 1-${MAX_FILTER_ROWS}. Null means 10.` }),
+      sort_by: orNull(ref("sortable"), "Sort measure; null sorts by population."),
+      sort_direction: orNull(ref("direction")),
+      limit: orNull({ type: "integer" }, `1-${MAX_FILTER_ROWS}; null means 10.`),
       ...scope,
     }),
-    fn("summarize_indicator", "Distribution summary (min, quartiles, median, max, lowest and highest town) of a Census measure across towns in scope. Not available for hospital measures.", {
-      indicator: { type: "string", enum: sortable.filter((k) => !HOSPITAL_KEYS.includes(k as never)) },
+    fn("summarize_indicator", "Distribution (min, quartiles, median, max, extreme towns) of a Census measure in scope. Not for hospital measures.", {
+      indicator: ref("census"),
       ...scope,
     }),
-    fn("explain_indicator", "Definition, denominator, caveats and source for a measure, or what a hospital SR value means. Use 'remoteness' for the remoteness classes.", {
-      indicator: { type: "string", enum: [...anyMeasure, "remoteness"] },
-      sr_value: nullable({ type: "number", description: "A hospital SR value the user asked about, e.g. 157; otherwise null." }),
+    fn("explain_indicator", "Definition, denominator, caveats and source of a measure; what a hospital SR value means; or 'remoteness'.", {
+      indicator: { anyOf: [ref("measure"), { type: "string", enum: ["remoteness"] }] },
+      sr_value: orNull({ type: "number" }, "Hospital SR value the user asked about, else null."),
     }),
-    fn("get_hospital_context", "Hospital-services context for one town: both SR measures with status, the Population Health Area (if identified) and other Atlas towns sharing it.", {
+    fn("get_hospital_context", "Hospital-services context for one town: both SR measures with status, Population Health Area if identified, other Atlas towns sharing it.", {
       town: townArg,
-      state,
+      state: stateArg,
     }),
   ];
 }

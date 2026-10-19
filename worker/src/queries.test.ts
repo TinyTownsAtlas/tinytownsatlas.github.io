@@ -55,10 +55,10 @@ describe("profiles and Census values", () => {
   it("reports Brewarrina diabetes with numerator and denominator (QuickStats anchor)", () => {
     const p = q(getTownProfile(idx, { town: "Brewarrina" }));
     const diabetes = p.censusHealthConditions.find((c: any) => c.key === "diabetes_pct");
-    expect([diabetes.percent, diabetes.count, diabetes.denominator]).toEqual([7.0, 52, 743]);
+    expect(diabetes.percent).toBe(7.0);
     expect(diabetes.text).toBe("7.0% (52 of 743 usual residents)");
     const unemployment = p.peopleAndContext.find((c: any) => c.key === "unemployment_rate_pct");
-    expect([unemployment.count, unemployment.denominator]).toEqual([13, 254]);
+    expect(unemployment.text).toBe("5.1% (13 of 254 labour force (15+))".replace("labour force (15+)", idx.indicators.unemployment_rate_pct.denominatorLabel));
     expect(p.peopleAndContext.find((c: any) => c.key === "indigenous_pct").note).toMatch(/descriptive/i);
   });
 
@@ -79,7 +79,7 @@ describe("compare_towns", () => {
     const r = q(compareTowns(idx, { towns: ["Brewarrina", "Wilcannia"], indicators: ["diabetes_pct", "mental_health_pct"] }));
     expect(r.measures).toHaveLength(2);
     expect(r.measures[0].values.map((v: any) => v.town)).toEqual(["Brewarrina (L)", "Wilcannia (L)"]);
-    expect(r.measures[0].values[0].count).toBe(52);
+    expect(r.measures[0].values[0].text).toContain("52 of 743");
   });
 
   it("defaults to ten conditions plus both hospital measures", () => {
@@ -197,7 +197,6 @@ describe("hospital context", () => {
     expect(r.populationHealthArea.name).toBe("Bourke - Brewarrina/ Walgett - Lightning Ridge");
     expect(r.measures[0].sr).toBe(156.6);
     expect(r.measures[0].text).toContain("Australia = 100");
-    expect(r.measures[0].derivedFrom).toMatch(/Population Health Area/);
     expect(r.measures[0].otherAtlasTownsWithSameAreaAndPublishedValue).toBeGreaterThan(0);
     expect(r.caveats.join(" ")).toMatch(/not hospital records for this town/);
   });

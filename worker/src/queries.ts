@@ -189,9 +189,6 @@ function censusValue(idx: AtlasIndex, t: IndexTown, key: string): ToolResult {
   return {
     measure: ind.shortLabel,
     percent: pct,
-    count,
-    denominator: denom,
-    denominatorIs: ind.denominatorLabel,
     text: `${pct.toFixed(1)}% (${count} of ${denom} ${ind.denominatorLabel})`,
     ...(denom < SMALL_DENOMINATOR ? { smallDenominator: true } : {}),
   };
@@ -212,7 +209,6 @@ function hospitalValue(idx: AtlasIndex, t: IndexTown, key: HospitalKey): ToolRes
       ...base,
       sr: v.sr,
       text: `SR ${v.sr.toFixed(1)} (Australia = 100): ${srVsAustralia(v.sr)}`,
-      derivedFrom: "wider Population Health Area, not town records",
     };
   }
   return { ...base, sr: null, text: idx.hospital.statusText[v.status] ?? v.status };
@@ -327,9 +323,8 @@ export function getTownProfile(idx: AtlasIndex, a: { town: string; state?: strin
     const entry = {
       key,
       ...censusValue(idx, t, key),
-      nationalMedianPercent: ind.nationalStats.median,
-      sameRemotenessMedianPercent: ind.remotenessStats[t.remoteness]?.median ?? null,
-      link: townLink(idx, t, key),
+      nationalMedian: ind.nationalStats.median,
+      sameRemotenessMedian: ind.remotenessStats[t.remoteness]?.median ?? null,
       ...(DESCRIPTIVE_ONLY.has(key) ? { note: "Descriptive Census context only." } : {}),
     };
     (ind.category === "health" ? health : context).push(entry);
@@ -343,7 +338,7 @@ export function getTownProfile(idx: AtlasIndex, a: { town: string; state?: strin
     hospitalNote: t.hosp.phaCode
       ? "Hospital figures are Population Health Area estimates assigned to the town in proportion to population, not town hospital records."
       : "Hospital figures are PHIDU estimates for a wider area that PHIDU did not identify for this town, so no area is named; they are not town hospital records.",
-    notes: ["Census percentages are not age-standardised and rest on small denominators.", "There is no overall health score."],
+    notes: ["Census percentages are not age-standardised and rest on small denominators.", "Medians are across Atlas towns."],
   };
 }
 
@@ -365,7 +360,7 @@ export function compareTowns(idx: AtlasIndex, a: { towns: string[]; indicators: 
       key,
       label: measureLabel(idx, key),
       values: resolved.map((t) => ({ town: t.name, state: t.state, ...measureValue(idx, t, key) })),
-      ...(idx.indicators[key] ? { nationalMedianPercent: idx.indicators[key].nationalStats.median } : {}),
+      ...(idx.indicators[key] ? { nationalMedian: idx.indicators[key].nationalStats.median } : {}),
       ...(DESCRIPTIVE_ONLY.has(key) ? { note: "Descriptive Census context only." } : {}),
     });
   }
@@ -523,7 +518,11 @@ export function filterTowns(
       ...brief(idx, t),
       values: shownKeys.map((k) => ({ key: k, ...measureValue(idx, t, k) })),
     })),
-    notes: [scopeNote(idx), "A filter lists towns meeting the stated conditions; it is not a ranking or a judgement about any town."],
+    notes: [
+      scopeNote(idx),
+      "A filter lists towns meeting the stated conditions; it is not a ranking or a judgement about any town.",
+      ...(shownKeys.some(isHospital) ? ["Hospital values are wider-area PHA estimates, not town records."] : []),
+    ],
   };
 }
 
