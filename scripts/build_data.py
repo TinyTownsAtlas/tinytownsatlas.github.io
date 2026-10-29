@@ -37,7 +37,7 @@ GEOJSON_POINTS = ROOT / "04_site" / "public" / "data" / "towns.geojson"
 TEN4TEN_CSV = ROOT / "04_site" / "data" / "ten4ten_communities.csv"
 DATA_DIR = ROOT / "04_site" / "public" / "data"
 
-# Atlas product lower bound. The published diabetes paper used 200; see build_analytic.py.
+# Atlas product lower bound. The companion Diabetology manuscript uses a 200-resident minimum; see build_analytic.py.
 PRIMARY_MIN_POP = 100
 PRIMARY_MAX_POP = 1499
 PRECISION = 1
@@ -279,7 +279,7 @@ def main() -> None:
                 "sha256": provenance_hash("_data_workbook-witth_details.xlsx"),
             },
             {
-                "name": "Diabetology UCL analytic dataset (validation reference for UCLs with 200+ residents)",
+                "name": "Diabetology UCL analytic dataset (public data comparison for UCLs with 200+ residents)",
                 "doi": "10.5281/zenodo.22783233",
                 "license": "CC BY 4.0",
                 "attribution": "Alexeev, Gwynne, Henson & Kirwan (2026); Australian Bureau of Statistics",
@@ -302,8 +302,12 @@ def main() -> None:
         "scopeDefinition": (
             f"Primary display universe: UCLs with {PRIMARY_MIN_POP}-{PRIMARY_MAX_POP:,} usual residents, "
             "excluding special/non-settlement records. This is a Tiny Towns Atlas product definition, "
-            "not an ABS definition of a town. The published diabetes analysis this Atlas builds on "
-            f"used a lower bound of {provenance['paperMinPopulation']} residents."
+            "not an ABS definition of a town. The companion Diabetology manuscript analyses UCLs with "
+            f"at least {provenance['paperMinPopulation']} usual residents. The Atlas displays a "
+            f"distinct universe of {len(primary):,} towns with {PRIMARY_MIN_POP}-{PRIMARY_MAX_POP:,} "
+            "usual residents and includes additional Census health indicators and broader-area "
+            "hospitalisation context; it is a related resource, not a replication or validation of "
+            "the manuscript's findings."
         ),
         "primaryMinPopulation": PRIMARY_MIN_POP,
         "primaryMaxPopulation": PRIMARY_MAX_POP,

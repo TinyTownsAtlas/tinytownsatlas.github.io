@@ -28,8 +28,11 @@ their separate PHIDU CC BY-NC-SA licence and have no town comparison distributio
 Unemployment remains unemployed / labour force, matching Census QuickStats for the same UCL.
 
 The 100-resident lower bound is a Tiny Towns Atlas product definition, not an ABS definition of a
-town. The published diabetes paper this Atlas builds on used 200 residents; the Atlas lowered the
-bound in October 2026 to include communities of 100-199 residents. See `DATA_CONTRACT.md`.
+town. The companion Diabetology manuscript analyses 1,743 UCLs with at least 200 usual residents.
+The Atlas's distinct display universe is 1,208 towns with 100–1,499 residents. It includes
+additional Census-reported health indicators and broader-area hospitalisation context, so it is a
+related public-facing resource, not an exact replication or validation of the manuscript's
+analysis. See `DATA_CONTRACT.md`.
 
 ## Run locally
 
@@ -77,9 +80,10 @@ picker and legend are generated from `indicators.json`; no frontend changes are 
 
 - Census data: ABS 2021 Census (TableBuilder), UCL extract supplied by PHIDU, Torrens University
   Australia (canonical master workbook in `05_source_archive/PHIDU_John_Glover/`). Attribute the ABS.
-- Validation reference: Zenodo DOI [10.5281/zenodo.22783233](https://doi.org/10.5281/zenodo.22783233),
-  CC BY 4.0 (Alexeev, Gwynne, Henson & Kirwan, 2026). For UCLs with 200+ residents the Atlas values
-  reproduce this dataset exactly.
+- Public data comparison: Zenodo DOI [10.5281/zenodo.22783233](https://doi.org/10.5281/zenodo.22783233),
+  CC BY 4.0 (Alexeev, Gwynne, Henson & Kirwan, 2026). The build compares the shared 200+ UCL source
+  records with this dataset as a data-consistency check; it does not replicate or validate the
+  manuscript's findings.
 - Geometry: ABS ASGS Edition 3, Urban Centres and Localities 2021 (GDA2020), CC BY 4.0. Attribute
   the ABS.
 - Basemap tiles: &copy; OpenStreetMap contributors, served from OSM's shared `tile.openstreetmap.org`.

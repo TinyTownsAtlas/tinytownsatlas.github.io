@@ -362,7 +362,9 @@ def main() -> None:
         "paperMinPopulation": PAPER_MIN_POP,
         "note": (
             f"The Atlas uses a {ATLAS_MIN_POP}-resident lower bound as a product definition. The "
-            f"published diabetes paper and Zenodo dataset used {PAPER_MIN_POP}. Neither is an ABS "
+            f"companion Diabetology manuscript analyses UCLs with at least {PAPER_MIN_POP} usual "
+            "residents; the public Zenodo dataset contains that analytical sample. "
+            "Neither the manuscript's sample threshold nor the Atlas product threshold is an ABS "
             "definition of a town."
         ),
         "sources": [

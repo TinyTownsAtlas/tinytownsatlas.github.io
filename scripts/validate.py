@@ -9,7 +9,7 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "public" / "data"
 
-# Atlas product scope (the published diabetes paper used a 200 lower bound; see build_analytic.py).
+# Atlas product scope (the companion Diabetology manuscript analyses UCLs with at least 200 usual residents; see build_analytic.py).
 PRIMARY_MIN_POP = 100
 PRIMARY_MAX_POP = 1499
 # Regression anchors from the published Zenodo dataset (population >= 200). Expanding the lower

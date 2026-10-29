@@ -5,8 +5,11 @@
 The Atlas's primary universe is **UCLs with 100–1,499 usual residents**, excluding special/
 non-settlement records. This is a Tiny Towns Atlas product definition, not an ABS definition of a
 town. It was lowered from 200 to 100 in October 2026 so that communities of 100–199 residents
-(relevant to Ten4Ten) are included. The published diabetes paper and its Zenodo dataset used a
-200-resident lower bound and are unchanged.
+(relevant to Ten4Ten) are included. The companion Diabetology manuscript analyses 1,743 UCLs with
+at least 200 usual residents. The Atlas displays a distinct universe of 1,208 towns with 100–1,499
+usual residents and includes additional Census-reported health indicators and broader-area
+hospitalisation context. It is a related resource, not a replication or validation of the
+manuscript's results.
 
 ## Canonical source
 
@@ -23,10 +26,11 @@ town. It was lowered from 200 to 100 in October 2026 so that communities of 100�
   - the same workbook columns for every indicator count and denominator.
 
   Every excluded record and its reason is written to `atlas_ucl_dataset_exclusions.csv`.
-- Validation reference: `01_public_source/zenodo/diabetes_ucl_analytic_dataset.csv` (1,743 UCLs
-  with 200+ residents, the paper's sample), codebook `01_public_source/zenodo/codebook.csv`. CC BY
-  4.0. Zenodo DOI `10.5281/zenodo.22783233`. `build_analytic.py` fails unless its 200+ subset
-  reproduces this file exactly (codes, population, counts, denominators, state, Remoteness Area).
+- Public data comparison: `01_public_source/zenodo/diabetes_ucl_analytic_dataset.csv` (1,743 UCLs
+  with 200+ residents, the manuscript's analysis sample), codebook `01_public_source/zenodo/codebook.csv`.
+  CC BY 4.0. Zenodo DOI `10.5281/zenodo.22783233`. `build_analytic.py` checks that the 200+ source
+  records match this file (codes, population, counts, denominators, state, Remoteness Area); this is
+  a data-consistency check, not validation of the manuscript's findings.
 - Geometry: ABS ASGS Edition 3, "Urban Centres and Localities — 2021 — Shapefile", GDA2020,
   downloaded from abs.gov.au (`UCL_2021_AUST_GDA2020_SHP.zip`, 1,837 UCL features). CC BY 4.0.
   Join key: analytic `ucl_code` (e.g. `UCL101001`) == `"UCL" + shapefile UCL_CODE21`

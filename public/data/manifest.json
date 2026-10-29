@@ -9,7 +9,7 @@
       "sha256": "356349d2fb410037c02d0219071dd6f29c53bfb79c6c01fc34c3cbce08937e8e"
     },
     {
-      "name": "Diabetology UCL analytic dataset (validation reference for UCLs with 200+ residents)",
+      "name": "Diabetology UCL analytic dataset (public data comparison for UCLs with 200+ residents)",
       "doi": "10.5281/zenodo.22783233",
       "license": "CC BY 4.0",
       "attribution": "Alexeev, Gwynne, Henson & Kirwan (2026); Australian Bureau of Statistics",
@@ -29,7 +29,7 @@
       "sha256": "6dfcf979d400641b3c88ff2a33d51fb7a5d05326f96df7b19c100b51651a2473"
     }
   ],
-  "scopeDefinition": "Primary display universe: UCLs with 100-1,499 usual residents, excluding special/non-settlement records. This is a Tiny Towns Atlas product definition, not an ABS definition of a town. The published diabetes analysis this Atlas builds on used a lower bound of 200 residents.",
+  "scopeDefinition": "Primary display universe: UCLs with 100-1,499 usual residents, excluding special/non-settlement records. This is a Tiny Towns Atlas product definition, not an ABS definition of a town. The companion Diabetology manuscript analyses UCLs with at least 200 usual residents. The Atlas displays a distinct universe of 1,208 towns with 100-1,499 usual residents and includes additional Census health indicators and broader-area hospitalisation context; it is a related resource, not a replication or validation of the manuscript's findings.",
   "primaryMinPopulation": 100,
   "primaryMaxPopulation": 1499,
   "primaryCount": 1208,
