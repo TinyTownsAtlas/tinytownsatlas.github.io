@@ -222,13 +222,15 @@ test('the demo page is noindex, and the Atlas pages are not', async () => {
   assert.equal(/noindex/i.test(String(demoHtml.source)), false, 'built Atlas page must not be noindex');
 }, 120000);
 
-test('the entry link is a discreet text link on the layer card, not in the header navigation', async () => {
+test('the entry link is a discreet text link under the header subtitle, not on the map layer card', async () => {
   const link = await read('src', 'my-ten4ten', 'entry-link.ts');
-  assert.match(link, /getElementById\("layer-control"\)/);
-  assert.equal(/topbar/.test(link), false, 'must not touch the header');
+  assert.match(link, /getElementById\("brand"\)/);
+  assert.equal(/layer-control|topbar-actions/.test(link), false, 'must not touch the layer card or the search and actions row');
   assert.match(link, /link\.rel = "nofollow"/);
   const css = await read('src', 'my-ten4ten', 'entry-link.css');
   assert.equal(/background:\s*var\(--color-accent\)/.test(css), false, 'no button styling');
+  assert.match(css, /color: var\(--color-muted\)/);
+  assert.match(css, /font-size: 0\.75rem/);
 });
 
 test('the deploy workflow tests, then publishes the demo build', async () => {

@@ -2,8 +2,8 @@
 
 A **synthetic-data demonstration** of a participant results page for TEN4TEN, built into this site. It
 uses invented people only. It is not approved for participants. The live site publishes it as a clearly labelled,
-`noindex`, synthetic demo at `/my-ten4ten/`, reached from a small text link at the foot of the map
-layer card. Tiny Towns Atlas remains the primary project. The demo is a frozen version (git tag
+`noindex`, synthetic demo at `/my-ten4ten/`, reached from a small text link under the header subtitle.
+Tiny Towns Atlas remains the primary project. The demo is a frozen version (git tag
 `my-ten4ten-demo-v1`) kept for review. This repository is public, so ethics, linkage and project-governance material is kept in the
 restricted TEN4TEN project folder, not here.
 
@@ -28,7 +28,7 @@ shows an error panel because no demo data is served.
 |---|---|
 | `my-ten4ten/index.html` | Page shell (extra entry point, demo builds only) |
 | `src/my-ten4ten/` | App modules, styles and tests. `policy.js` holds the release rules |
-| `src/my-ten4ten/entry-link.ts` | Adds the small "My TEN4TEN (demo)" text link to the layer card; loaded only in demo mode |
+| `src/my-ten4ten/entry-link.ts` | Adds the small "My TEN4TEN (demo)" text link under the header subtitle; loaded only in demo mode |
 | `demo/my-ten4ten/research/` | Synthetic research store (identity registry, source records). **Never shipped or served** |
 | `demo/my-ten4ten/build_views.mjs` | Applies the release rules, writes per-person views, checks for leakage |
 | `demo/my-ten4ten/data/` | Public measure definitions, demo accounts and per-person views (synthetic, generated) |
