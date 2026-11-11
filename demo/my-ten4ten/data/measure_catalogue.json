@@ -1,0 +1,55 @@
+{
+  "_notice": "Public measure definitions. Contains no personal data.",
+  "domains": {
+    "body_measures": "Blood pressure and body size",
+    "blood_glucose": "Blood sugar",
+    "fitness": "Fitness tests",
+    "lifestyle_pain": "Smoking and pain",
+    "mood_screen": "Mood screen"
+  },
+  "measures": {
+    "sbp": {
+      "label": "Systolic blood pressure", "kind": "number", "unit": "mmHg", "decimals": 0,
+      "range": [60, 260], "domain": "body_measures", "comparability": "same_protocol",
+      "explain": "The top number from one blood pressure reading taken at the screening. A single reading can vary from day to day."
+    },
+    "bmi": {
+      "label": "Body mass index (BMI)", "kind": "number", "unit": "kg/m²", "decimals": 1,
+      "range": [12, 70], "domain": "body_measures", "comparability": "caution_technique",
+      "explain": "Calculated from height and weight. Height and waist can be measured differently between screenings."
+    },
+    "rbg": {
+      "label": "Random blood sugar", "kind": "number", "unit": "mmol/L", "decimals": 1,
+      "range": [1, 35], "domain": "blood_glucose", "comparability": "caution_meal_time",
+      "explain": "A blood sugar reading taken at a random time. How long since you last ate affects this reading."
+    },
+    "smoking": {
+      "label": "Smoking", "kind": "category",
+      "categories": { "never": "Never smoked", "former": "Former smoker", "current": "Current smoker" },
+      "domain": "lifestyle_pain", "comparability": "same_question",
+      "explain": "Your answer to the smoking question."
+    },
+    "pain_now": {
+      "label": "Pain right now", "kind": "category",
+      "categories": { "no": "No", "yes": "Yes" },
+      "domain": "lifestyle_pain", "comparability": "same_question",
+      "explain": "Your answer to the question about pain at the time of the screening."
+    },
+    "chair_stands": {
+      "label": "30-second chair stand", "kind": "number", "unit": "stands", "decimals": 0,
+      "range": [0, 30], "domain": "fitness", "comparability": "caution_protocol",
+      "explain": "How many times you stood up and sat down in 30 seconds."
+    },
+    "walk_6mw": {
+      "label": "6-minute walk", "kind": "number", "unit": "m", "decimals": 0,
+      "range": [100, 800], "domain": "fitness", "comparability": "same_protocol",
+      "explain": "The distance you walked in 6 minutes. Distances are checked for recording errors before they are shown."
+    },
+    "phq2": {
+      "label": "Mood screen (PHQ-2)", "kind": "category",
+      "categories": { "negative": "Screen not positive", "positive": "Screen positive" },
+      "domain": "mood_screen", "comparability": "same_question",
+      "explain": "A short two-question mood screen. It is a screen, not a diagnosis."
+    }
+  }
+}

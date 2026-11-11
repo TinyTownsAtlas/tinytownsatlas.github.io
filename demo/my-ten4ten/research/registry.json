@@ -1,0 +1,328 @@
+{
+  "_notice": "SYNTHETIC DATA ONLY. Invented people, identifiers, dates and measurements for prototype testing. Not a copy of any real registry. Never place real participant records, real IDs or real names in this file.",
+  "_status_definitions": {
+    "candidate": "Algorithmic historical match. Not verified. Never shown to participants.",
+    "case_reviewed": "A team member has looked at the match, but the person has not been verified. Never shown to participants.",
+    "identity_verified": "The person has been verified through the approved activation process (simulated in this prototype). Only this status can lead to a visit being shown.",
+    "rejected": "The team has ruled the match out. Never shown, and never used for return."
+  },
+  "_approval_definitions": {
+    "approved": "Results from this visit may be returned for the listed domains only.",
+    "pending": "Results from this visit are being checked. Nothing from the visit is shown.",
+    "not_approved": "Nothing from this visit is returned."
+  },
+  "_domains": [
+    "body_measures",
+    "blood_glucose",
+    "fitness",
+    "lifestyle_pain",
+    "mood_screen"
+  ],
+  "persons": [
+    {
+      "ttid": "T4T-2H7M-KQ4R",
+      "demo_code": "DEMO-01",
+      "demo_label": "Demo participant 01",
+      "profile": "Scenario: Wave 1 only, results ready",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W1-0101",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-9ZJD-6WPN",
+      "demo_code": "DEMO-02",
+      "demo_label": "Demo participant 02",
+      "profile": "Scenario: Wave 2 only, results ready",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W2-0202",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-5RVC-3XTE",
+      "demo_code": "DEMO-03",
+      "demo_label": "Demo participant 03",
+      "profile": "Scenario: confirmed returner, Wave 1 and Wave 2 both checked and approved",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W1-0102",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        },
+        {
+          "visit_id": "W2-0203",
+          "link_status": "identity_verified",
+          "method": "historical_match",
+          "match_grade": "high_confidence",
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-K8NF-W2AG",
+      "demo_code": "DEMO-04",
+      "demo_label": "Demo participant 04",
+      "profile": "Scenario: unverified historical match (candidate)",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W1-0103",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        },
+        {
+          "visit_id": "W2-0204",
+          "link_status": "candidate",
+          "method": "historical_match",
+          "match_grade": "probable",
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-7MQB-D9YH",
+      "demo_code": "DEMO-05",
+      "demo_label": "Demo participant 05",
+      "profile": "Scenario: candidate reviewed by team, not verified",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W1-0104",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        },
+        {
+          "visit_id": "W2-0205",
+          "link_status": "case_reviewed",
+          "method": "historical_match",
+          "match_grade": "probable",
+          "return": {
+            "status": "pending",
+            "domains": []
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-3PJX-R6CS",
+      "demo_code": "DEMO-06",
+      "demo_label": "Demo participant 06",
+      "profile": "Scenario: incomplete measurements (declined test, placeholder value, entry under check)",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W1-0105",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-HW4T-Z8KE",
+      "demo_code": "DEMO-07",
+      "demo_label": "Demo participant 07",
+      "profile": "Scenario: multiple visits, one being checked, next screening planned",
+      "planned_waves": [
+        {
+          "wave": 3,
+          "label": "Next screening (planned, date to be confirmed)"
+        }
+      ],
+      "visits": [
+        {
+          "visit_id": "W1-0106",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        },
+        {
+          "visit_id": "W2-0207",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "pending",
+            "domains": []
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-6DRN-Q3VM",
+      "demo_code": "DEMO-08",
+      "demo_label": "Demo participant 08",
+      "profile": "Scenario: no approved personal results",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W2-0208",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "not_approved",
+            "domains": []
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-Y5GA-F7RD",
+      "demo_code": "DEMO-09",
+      "demo_label": "Demo participant 09",
+      "profile": "Scenario: sensitive domain not approved (mood screen)",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W2-0209",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ttid": "T4T-M4XC-9EJT",
+      "demo_code": "DEMO-10",
+      "demo_label": "Demo participant 10",
+      "profile": "Scenario: six-minute walk entry under check (Wave 2)",
+      "planned_waves": [],
+      "visits": [
+        {
+          "visit_id": "W1-0109",
+          "link_status": "identity_verified",
+          "method": "enrolment",
+          "match_grade": null,
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        },
+        {
+          "visit_id": "W2-0210",
+          "link_status": "identity_verified",
+          "method": "historical_match",
+          "match_grade": "high_confidence",
+          "return": {
+            "status": "approved",
+            "domains": [
+              "body_measures",
+              "blood_glucose",
+              "fitness",
+              "lifestyle_pain"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

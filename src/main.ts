@@ -12,6 +12,10 @@ import { getMapLayers, resolveLayer } from "./layers";
 // the Worker; in local development it defaults to `wrangler dev`.
 const ASSISTANT_URL: string = import.meta.env.VITE_ASSISTANT_URL ?? (import.meta.env.DEV ? "http://localhost:8787/chat" : "");
 
+// Demo mode only (`vite --mode demo`): adds the entry link to the synthetic My TEN4TEN demo.
+// Absent from default builds. See docs/MY_TEN4TEN.md.
+if (import.meta.env.MODE === "demo") void import("./my-ten4ten/entry-link");
+
 async function main(): Promise<void> {
   const data = await loadAtlasData();
   const searchIndex = buildSearchIndex(data.towns, data.ten4ten.uclCodes, data.ten4ten.communityLabels);

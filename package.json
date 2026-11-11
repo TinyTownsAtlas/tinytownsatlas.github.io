@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev:demo": "vite --mode demo",
+    "build:demo": "tsc -b && vite build --mode demo",
+    "preview:demo": "vite preview --outDir dist-demo",
+    "build:my-ten4ten": "node demo/my-ten4ten/build_views.mjs"
   },
   "dependencies": {
     "maplibre-gl": "^4.7.1",

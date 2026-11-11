@@ -1,0 +1,96 @@
+{
+  "ttid": "T4T-M4XC-9EJT",
+  "demo_notice": "SYNTHETIC DEMO DATA. Not real results. Not medical advice.",
+  "visits": [
+    {
+      "visit_key": "v1",
+      "wave": 1,
+      "label": "Wave 1 · March 2026",
+      "date": "2026-03-18",
+      "status": "results_ready",
+      "measures": [
+        {
+          "id": "sbp",
+          "state": "recorded",
+          "value": 130
+        },
+        {
+          "id": "bmi",
+          "state": "recorded",
+          "value": 26.6
+        },
+        {
+          "id": "rbg",
+          "state": "recorded",
+          "value": 6
+        },
+        {
+          "id": "smoking",
+          "state": "recorded",
+          "value": "former"
+        },
+        {
+          "id": "chair_stands",
+          "state": "recorded",
+          "value": 12
+        },
+        {
+          "id": "walk_6mw",
+          "state": "recorded",
+          "value": 360
+        },
+        {
+          "id": "pain_now",
+          "state": "recorded",
+          "value": "no"
+        }
+      ],
+      "some_results_not_shown": true
+    },
+    {
+      "visit_key": "v2",
+      "wave": 2,
+      "label": "Wave 2 · September 2026",
+      "date": "2026-09-17",
+      "status": "results_ready",
+      "measures": [
+        {
+          "id": "sbp",
+          "state": "recorded",
+          "value": 128
+        },
+        {
+          "id": "bmi",
+          "state": "recorded",
+          "value": 26.4
+        },
+        {
+          "id": "rbg",
+          "state": "recorded",
+          "value": 6.2
+        },
+        {
+          "id": "smoking",
+          "state": "recorded",
+          "value": "former"
+        },
+        {
+          "id": "chair_stands",
+          "state": "recorded",
+          "value": 12
+        },
+        {
+          "id": "walk_6mw",
+          "state": "under_review"
+        },
+        {
+          "id": "pain_now",
+          "state": "recorded",
+          "value": "no"
+        }
+      ],
+      "some_results_not_shown": true
+    }
+  ],
+  "planned": []
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "ttid": "T4T-2H7M-KQ4R",
+    "code": "DEMO-01",
+    "label": "Demo participant 01",
+    "profile": "Scenario: Wave 1 only, results ready"
+  },
+  {
+    "ttid": "T4T-9ZJD-6WPN",
+    "code": "DEMO-02",
+    "label": "Demo participant 02",
+    "profile": "Scenario: Wave 2 only, results ready"
+  },
+  {
+    "ttid": "T4T-5RVC-3XTE",
+    "code": "DEMO-03",
+    "label": "Demo participant 03",
+    "profile": "Scenario: confirmed returner, Wave 1 and Wave 2 both checked and approved"
+  },
+  {
+    "ttid": "T4T-K8NF-W2AG",
+    "code": "DEMO-04",
+    "label": "Demo participant 04",
+    "profile": "Scenario: unverified historical match (candidate)"
+  },
+  {
+    "ttid": "T4T-7MQB-D9YH",
+    "code": "DEMO-05",
+    "label": "Demo participant 05",
+    "profile": "Scenario: candidate reviewed by team, not verified"
+  },
+  {
+    "ttid": "T4T-3PJX-R6CS",
+    "code": "DEMO-06",
+    "label": "Demo participant 06",
+    "profile": "Scenario: incomplete measurements (declined test, placeholder value, entry under check)"
+  },
+  {
+    "ttid": "T4T-HW4T-Z8KE",
+    "code": "DEMO-07",
+    "label": "Demo participant 07",
+    "profile": "Scenario: multiple visits, one being checked, next screening planned"
+  },
+  {
+    "ttid": "T4T-6DRN-Q3VM",
+    "code": "DEMO-08",
+    "label": "Demo participant 08",
+    "profile": "Scenario: no approved personal results"
+  },
+  {
+    "ttid": "T4T-Y5GA-F7RD",
+    "code": "DEMO-09",
+    "label": "Demo participant 09",
+    "profile": "Scenario: sensitive domain not approved (mood screen)"
+  },
+  {
+    "ttid": "T4T-M4XC-9EJT",
+    "code": "DEMO-10",
+    "label": "Demo participant 10",
+    "profile": "Scenario: six-minute walk entry under check (Wave 2)"
+  }
+]

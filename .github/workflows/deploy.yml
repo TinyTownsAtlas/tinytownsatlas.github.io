@@ -24,12 +24,16 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      - run: npm run build
+      # The tests include the My TEN4TEN release-rule, leakage and isolation checks. A failure stops the deploy.
+      - run: npm test
+      # The live site is the demo-mode build: the Tiny Towns Atlas plus the synthetic My TEN4TEN demo
+      # at /my-ten4ten/. (The default `npm run build` is the Atlas alone.) Output goes to dist-demo/.
+      - run: npm run build:demo
       # No BASE_PATH override: this repo is an organization root Pages site
       # (tinytownsatlas.github.io), served at "/", which is vite.config.ts's default base.
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: dist-demo
 
   deploy:
     needs: build

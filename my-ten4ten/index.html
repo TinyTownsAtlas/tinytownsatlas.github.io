@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'"
+    />
+    <title>My TEN4TEN (demo) · Tiny Towns Atlas</title>
+    <meta name="description" content="Synthetic-data demo of My TEN4TEN. Invented results only." />
+  </head>
+  <body class="mt">
+    <a class="mt-skip" href="#main">Skip to main content</a>
+    <header id="topbar">
+      <div id="brand">
+        <h1>My TEN4TEN (demo)</h1>
+        <p id="subtitle">TEN4TEN screening results</p>
+      </div>
+      <div id="topbar-actions">
+        <a class="mt-toplink" href="%BASE_URL%">Tiny Towns Atlas</a>
+        <span id="mt-who" class="mt-who"></span>
+        <button id="mt-signout" class="mt-btn mt-btn-outline" type="button" hidden>Sign out</button>
+      </div>
+    </header>
+    <p class="mt-notice" role="note">
+      <strong>Prototype · invented data.</strong> Not real results, not medical advice. Sign-in is simulated.
+    </p>
+    <main id="main" tabindex="-1">
+      <p id="mt-status" class="sr-only" role="status"></p>
+      <noscript><p class="mt-card">This page needs JavaScript to show results.</p></noscript>
+      <div id="mt-root"></div>
+    </main>
+    <script type="module" src="/src/my-ten4ten/app.js"></script>
+  </body>
+</html>

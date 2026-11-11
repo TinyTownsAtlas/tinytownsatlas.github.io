@@ -1,0 +1,49 @@
+{
+  "ttid": "T4T-3PJX-R6CS",
+  "demo_notice": "SYNTHETIC DEMO DATA. Not real results. Not medical advice.",
+  "visits": [
+    {
+      "visit_key": "v1",
+      "wave": 1,
+      "label": "Wave 1 · March 2026",
+      "date": "2026-03-16",
+      "status": "results_ready",
+      "measures": [
+        {
+          "id": "sbp",
+          "state": "recorded",
+          "value": 142
+        },
+        {
+          "id": "bmi",
+          "state": "not_recorded"
+        },
+        {
+          "id": "rbg",
+          "state": "recorded",
+          "value": 7.2
+        },
+        {
+          "id": "smoking",
+          "state": "recorded",
+          "value": "current"
+        },
+        {
+          "id": "chair_stands",
+          "state": "declined"
+        },
+        {
+          "id": "walk_6mw",
+          "state": "under_review"
+        },
+        {
+          "id": "pain_now",
+          "state": "recorded",
+          "value": "yes"
+        }
+      ],
+      "some_results_not_shown": true
+    }
+  ],
+  "planned": []
+}

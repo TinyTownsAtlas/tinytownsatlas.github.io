@@ -1,0 +1,97 @@
+{
+  "ttid": "T4T-5RVC-3XTE",
+  "demo_notice": "SYNTHETIC DEMO DATA. Not real results. Not medical advice.",
+  "visits": [
+    {
+      "visit_key": "v1",
+      "wave": 1,
+      "label": "Wave 1 · March 2026",
+      "date": "2026-03-11",
+      "status": "results_ready",
+      "measures": [
+        {
+          "id": "sbp",
+          "state": "recorded",
+          "value": 138
+        },
+        {
+          "id": "bmi",
+          "state": "recorded",
+          "value": 30.6
+        },
+        {
+          "id": "rbg",
+          "state": "recorded",
+          "value": 7.9
+        },
+        {
+          "id": "smoking",
+          "state": "recorded",
+          "value": "current"
+        },
+        {
+          "id": "chair_stands",
+          "state": "recorded",
+          "value": 9
+        },
+        {
+          "id": "walk_6mw",
+          "state": "recorded",
+          "value": 340
+        },
+        {
+          "id": "pain_now",
+          "state": "recorded",
+          "value": "yes"
+        }
+      ],
+      "some_results_not_shown": true
+    },
+    {
+      "visit_key": "v2",
+      "wave": 2,
+      "label": "Wave 2 · September 2026",
+      "date": "2026-09-09",
+      "status": "results_ready",
+      "measures": [
+        {
+          "id": "sbp",
+          "state": "recorded",
+          "value": 129
+        },
+        {
+          "id": "bmi",
+          "state": "recorded",
+          "value": 30.1
+        },
+        {
+          "id": "rbg",
+          "state": "recorded",
+          "value": 6.8
+        },
+        {
+          "id": "smoking",
+          "state": "recorded",
+          "value": "former"
+        },
+        {
+          "id": "chair_stands",
+          "state": "recorded",
+          "value": 11
+        },
+        {
+          "id": "walk_6mw",
+          "state": "recorded",
+          "value": 362
+        },
+        {
+          "id": "pain_now",
+          "state": "recorded",
+          "value": "no"
+        }
+      ],
+      "some_results_not_shown": true
+    }
+  ],
+  "planned": []
+}

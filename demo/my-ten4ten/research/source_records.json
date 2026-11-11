@@ -1,0 +1,223 @@
+{
+  "_notice": "SYNTHETIC DATA ONLY. Invented source records for prototype testing. The raw ID formats (leading zeros, unpadded, non-numeric) imitate fieldwork variation only; none of these IDs is a real participant identifier.",
+  "visits": [
+    {
+      "visit_id": "W1-0101", "wave": 1, "label": "Wave 1 · March 2026", "date": "2026-03-10",
+      "record_quality": "ok", "source_participant_id_raw": "00101",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 124 },
+        "bmi": { "state": "recorded", "value": 27.8 },
+        "rbg": { "state": "recorded", "value": 6.1 },
+        "smoking": { "state": "recorded", "value": "never" },
+        "chair_stands": { "state": "recorded", "value": 12 },
+        "walk_6mw": { "state": "recorded", "value": 402 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W1-0102", "wave": 1, "label": "Wave 1 · March 2026", "date": "2026-03-11",
+      "record_quality": "ok", "source_participant_id_raw": "00102",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 138 },
+        "bmi": { "state": "recorded", "value": 30.6 },
+        "rbg": { "state": "recorded", "value": 7.9 },
+        "smoking": { "state": "recorded", "value": "current" },
+        "chair_stands": { "state": "recorded", "value": 9 },
+        "walk_6mw": { "state": "recorded", "value": 340 },
+        "pain_now": { "state": "recorded", "value": "yes" },
+        "phq2": { "state": "recorded", "value": "positive" }
+      }
+    },
+    {
+      "visit_id": "W1-0103", "wave": 1, "label": "Wave 1 · March 2026", "date": "2026-03-12",
+      "record_quality": "ok", "source_participant_id_raw": "00103",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 126 },
+        "bmi": { "state": "recorded", "value": 33.0 },
+        "rbg": { "state": "recorded", "value": 6.4 },
+        "smoking": { "state": "recorded", "value": "former" },
+        "chair_stands": { "state": "recorded", "value": 14 },
+        "walk_6mw": { "state": "recorded", "value": 415 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W1-0104", "wave": 1, "label": "Wave 1 · March 2026", "date": "2026-03-13",
+      "record_quality": "ok", "source_participant_id_raw": "00104",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 118 },
+        "bmi": { "state": "recorded", "value": 25.4 },
+        "rbg": { "state": "recorded", "value": 5.6 },
+        "smoking": { "state": "recorded", "value": "never" },
+        "chair_stands": { "state": "recorded", "value": 13 },
+        "walk_6mw": { "state": "recorded", "value": 455 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W1-0105", "wave": 1, "label": "Wave 1 · March 2026", "date": "2026-03-16",
+      "record_quality": "ok", "source_participant_id_raw": "00105",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 142 },
+        "bmi": { "state": "recorded", "value": 0, "flags": ["placeholder_value"] },
+        "rbg": { "state": "recorded", "value": 7.2 },
+        "smoking": { "state": "recorded", "value": "current" },
+        "chair_stands": { "state": "declined" },
+        "walk_6mw": { "state": "recorded", "value": 550, "flags": ["entry_under_check"] },
+        "pain_now": { "state": "recorded", "value": "yes" },
+        "phq2": { "state": "recorded", "value": "positive" }
+      }
+    },
+    {
+      "visit_id": "W1-0106", "wave": 1, "label": "Wave 1 · March 2026", "date": "2026-03-17",
+      "record_quality": "ok", "source_participant_id_raw": "00106",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 121 },
+        "bmi": { "state": "recorded", "value": 24.9 },
+        "rbg": { "state": "recorded", "value": 5.9 },
+        "smoking": { "state": "recorded", "value": "never" },
+        "chair_stands": { "state": "recorded", "value": 15 },
+        "walk_6mw": { "state": "recorded", "value": 470 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W1-0109", "wave": 1, "label": "Wave 1 · March 2026", "date": "2026-03-18",
+      "record_quality": "ok", "source_participant_id_raw": "00109",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 130 },
+        "bmi": { "state": "recorded", "value": 26.6 },
+        "rbg": { "state": "recorded", "value": 6.0 },
+        "smoking": { "state": "recorded", "value": "former" },
+        "chair_stands": { "state": "recorded", "value": 12 },
+        "walk_6mw": { "state": "recorded", "value": 360 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W2-0202", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-08",
+      "record_quality": "ok", "source_participant_id_raw": "202",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 131 },
+        "bmi": { "state": "recorded", "value": 31.2 },
+        "rbg": { "state": "recorded", "value": 7.4 },
+        "smoking": { "state": "recorded", "value": "current" },
+        "chair_stands": { "state": "unable" },
+        "walk_6mw": { "state": "recorded", "value": 380 },
+        "pain_now": { "state": "recorded", "value": "yes" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W2-0203", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-09",
+      "record_quality": "ok", "source_participant_id_raw": "0203",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 129 },
+        "bmi": { "state": "recorded", "value": 30.1 },
+        "rbg": { "state": "recorded", "value": 6.8 },
+        "smoking": { "state": "recorded", "value": "former" },
+        "chair_stands": { "state": "recorded", "value": 11 },
+        "walk_6mw": { "state": "recorded", "value": 362 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W2-0204", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-10",
+      "record_quality": "ok", "source_participant_id_raw": "204",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 189 },
+        "bmi": { "state": "recorded", "value": 47.6 },
+        "rbg": { "state": "recorded", "value": 11.4 },
+        "smoking": { "state": "recorded", "value": "current" },
+        "chair_stands": { "state": "recorded", "value": 27 },
+        "walk_6mw": { "state": "recorded", "value": 612 },
+        "pain_now": { "state": "recorded", "value": "yes" },
+        "phq2": { "state": "recorded", "value": "positive" }
+      }
+    },
+    {
+      "visit_id": "W2-0205", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-11",
+      "record_quality": "ok", "source_participant_id_raw": "0205",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 152 },
+        "bmi": { "state": "recorded", "value": 36.2 },
+        "rbg": { "state": "recorded", "value": 8.3 },
+        "smoking": { "state": "recorded", "value": "former" },
+        "chair_stands": { "state": "recorded", "value": 16 },
+        "walk_6mw": { "state": "recorded", "value": 390 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "positive" }
+      }
+    },
+    {
+      "visit_id": "W2-0207", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-14",
+      "record_quality": "ok", "source_participant_id_raw": "207",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 127 },
+        "bmi": { "state": "recorded", "value": 25.3 },
+        "rbg": { "state": "recorded", "value": 6.0 },
+        "smoking": { "state": "recorded", "value": "never" },
+        "chair_stands": { "state": "recorded", "value": 14 },
+        "walk_6mw": { "state": "recorded", "value": 455 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W2-0208", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-15",
+      "record_quality": "ok", "source_participant_id_raw": "0208",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 133 },
+        "bmi": { "state": "recorded", "value": 29.7 },
+        "rbg": { "state": "recorded", "value": 6.6 },
+        "smoking": { "state": "recorded", "value": "never" },
+        "chair_stands": { "state": "recorded", "value": 7 },
+        "walk_6mw": { "state": "recorded", "value": 300 },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "W2-0209", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-16",
+      "record_quality": "ok", "source_participant_id_raw": "209",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 134 },
+        "bmi": { "state": "recorded", "value": 28.8 },
+        "rbg": { "state": "recorded", "value": 5.8 },
+        "smoking": { "state": "recorded", "value": "never" },
+        "chair_stands": { "state": "recorded", "value": 8 },
+        "walk_6mw": { "state": "recorded", "value": 305 },
+        "pain_now": { "state": "recorded", "value": "yes" },
+        "phq2": { "state": "recorded", "value": "positive" }
+      }
+    },
+    {
+      "visit_id": "W2-0210", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-17",
+      "record_quality": "ok", "source_participant_id_raw": "0210",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 128 },
+        "bmi": { "state": "recorded", "value": 26.4 },
+        "rbg": { "state": "recorded", "value": 6.2 },
+        "smoking": { "state": "recorded", "value": "former" },
+        "chair_stands": { "state": "recorded", "value": 12 },
+        "walk_6mw": { "state": "recorded", "value": 455, "flags": ["entry_under_check"] },
+        "pain_now": { "state": "recorded", "value": "no" },
+        "phq2": { "state": "recorded", "value": "negative" }
+      }
+    },
+    {
+      "visit_id": "TEST-0001", "wave": 2, "label": "Wave 2 · September 2026", "date": "2026-09-22",
+      "record_quality": "test_entry", "source_participant_id_raw": "TEST-0001",
+      "measures": {
+        "sbp": { "state": "recorded", "value": 999 },
+        "rbg": { "state": "recorded", "value": 99.0 }
+      }
+    }
+  ]
+}

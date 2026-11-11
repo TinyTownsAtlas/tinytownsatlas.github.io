@@ -1,0 +1,178 @@
+/* My TEN4TEN demo page. Uses the Atlas tokens from ../style/main.css (--color-*), its topbar,
+   system font, 6px radii, 1px borders and 700px breakpoint. Scoped to body.mt. */
+
+body.mt {
+  --mt-tint: #f0f4f8;
+  --mt-ready-bg: #e6eef6;
+  --mt-ready-ink: #1f4a70;
+  --mt-warn-bg: #f8f1e3;
+  --mt-warn-ink: #5b3f0e;
+  --mt-none-bg: #efefef;
+  --mt-none-ink: #4a4a4a;
+  height: auto;
+  min-height: 100%;
+  line-height: 1.5;
+}
+
+.mt a { color: var(--color-accent); }
+.mt a:focus-visible, .mt button:focus-visible, .mt input:focus-visible, .mt summary:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.mt-skip { position: absolute; left: 8px; top: -48px; background: #fff; border: 2px solid var(--color-accent); padding: 0.4rem 0.7rem; border-radius: 6px; z-index: 50; }
+.mt-skip:focus { top: 8px; }
+
+/* Topbar extras (the bar itself is the Atlas #topbar). */
+.mt-toplink { color: var(--color-muted); font-size: 0.9rem; text-decoration: none; padding: 0 0.25rem; min-height: 44px; display: inline-flex; align-items: center; }
+.mt-toplink:hover { text-decoration: underline; }
+.mt-who { font-size: 0.85rem; color: var(--color-muted); }
+#topbar-actions { flex-wrap: wrap; }
+@media (max-width: 700px) {
+  #topbar-actions { justify-content: space-between; }
+}
+
+.mt-notice {
+  margin: 0;
+  padding: 0.4rem 1.25rem;
+  font-size: 0.8rem;
+  color: var(--mt-warn-ink);
+  background: var(--mt-warn-bg);
+  border-bottom: 1px solid #e8dcc0;
+}
+
+.mt main { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 3rem; }
+@media (max-width: 700px) { .mt main { padding: 1rem 1rem 2.5rem; } }
+.mt h2 { font-size: 1.35rem; margin: 0 0 0.5rem; }
+.mt h3 { font-size: 1.05rem; margin: 0 0 0.6rem; }
+.mt h4 { font-size: 0.95rem; margin: 0 0 0.25rem; }
+.mt-title:focus { outline: none; }
+
+.mt-muted { color: var(--color-muted); }
+.mt-small { font-size: 0.85rem; }
+.mt-strong { font-weight: 600; margin: 0 0 0.25rem; }
+.mt-mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 0.85rem; word-break: break-all; margin: 0 0 0.35rem; }
+.mt-note-line { margin: 0.5rem 0; padding-left: 0.6rem; border-left: 3px solid var(--color-border); color: var(--color-muted); font-size: 0.9rem; }
+.mt-error { color: #8a2f2f; font-weight: 600; min-height: 1.2em; margin: 0; }
+
+/* Buttons and fields, matching the Atlas controls. */
+.mt-btn {
+  min-height: 44px; padding: 0.5rem 1rem; font: inherit; font-size: 0.95rem;
+  color: #fff; background: var(--color-accent); border: 1px solid var(--color-accent);
+  border-radius: 6px; cursor: pointer;
+}
+.mt-btn-outline { color: var(--color-accent); background: var(--color-bg); }
+.mt-btn-outline:hover { background: var(--mt-tint); }
+.mt-btn-small { min-height: 40px; padding: 0.35rem 0.8rem; font-size: 0.85rem; }
+.mt-field { display: grid; gap: 0.3rem; }
+.mt-field label { font-size: 0.85rem; font-weight: 600; }
+.mt-field input {
+  min-height: 44px; padding: 0.5rem 0.75rem; font: inherit; font-size: 1rem;
+  border: 1px solid var(--color-border); border-radius: 6px; width: 100%;
+}
+.mt-form { display: grid; gap: 0.9rem; margin: 1rem 0; }
+
+.mt-card { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem 1.1rem; }
+.mt-entry { max-width: 420px; margin: 1.5rem auto; }
+.mt-entry .mt-btn { justify-self: start; }
+
+.mt-details summary { cursor: pointer; font-size: 0.9rem; color: var(--color-accent); min-height: 32px; padding: 0.3rem 0; }
+.mt-details-inline { margin-top: 0.5rem; }
+.mt-accounts { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.75rem; }
+.mt-account { border-top: 1px solid var(--color-border); padding-top: 0.6rem; font-size: 0.9rem; }
+.mt-account p { margin: 0 0 0.3rem; }
+
+/* Summary strip */
+.mt-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin: 0.75rem 0 1.5rem; }
+.mt-stat { background: var(--mt-tint); border-radius: 8px; padding: 0.7rem 0.85rem; }
+.mt-stat-value { margin: 0; font-size: 1.35rem; font-weight: 650; line-height: 1.2; }
+.mt-stat-label { margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--color-muted); }
+@media (max-width: 700px) {
+  .mt-stat-value { font-size: 1.05rem; }
+  .mt-summary { gap: 0.5rem; }
+  .mt-stat { padding: 0.55rem 0.6rem; }
+}
+
+.mt-section { margin: 0 0 1.75rem; }
+
+/* Pills (from format.js) */
+.pill { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.pill-ready { background: var(--mt-ready-bg); color: var(--mt-ready-ink); }
+.pill-check { background: var(--mt-warn-bg); color: var(--mt-warn-ink); }
+.pill-none { background: var(--mt-none-bg); color: var(--mt-none-ink); }
+
+/* Timeline of screenings */
+.mt-timeline { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0.5rem; position: relative; }
+.mt-step { position: relative; padding-top: 1.4rem; text-align: left; min-width: 0; }
+.mt-step::before { content: ""; position: absolute; top: 0.45rem; left: 0; right: -0.5rem; border-top: 2px solid var(--color-border); }
+.mt-step:last-child::before { right: 0; }
+.mt-dot { position: absolute; top: 0; left: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--color-accent); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--color-accent); }
+.mt-step-check .mt-dot { background: #b7791f; box-shadow: 0 0 0 1px #b7791f; }
+.mt-step-none .mt-dot { background: #8a8a8a; box-shadow: 0 0 0 1px #8a8a8a; }
+.mt-step-planned .mt-dot { background: #fff; box-shadow: 0 0 0 2px #8a8a8a; }
+.mt-step-planned::before { border-top-style: dashed; }
+.mt-step p { margin: 0 0 0.25rem; }
+.mt-step-title { font-weight: 600; font-size: 0.95rem; }
+.mt-step-date { color: var(--color-muted); font-size: 0.85rem; }
+.mt-step-note { color: var(--color-muted); font-size: 0.8rem; margin-top: 0.3rem; }
+@media (max-width: 700px) {
+  .mt-timeline { grid-auto-flow: row; grid-auto-columns: auto; gap: 0; }
+  .mt-step { padding: 0 0 1rem 1.7rem; }
+  .mt-step::before { top: 0.9rem; bottom: -0.1rem; left: 6px; right: auto; border-top: 0; border-left: 2px solid var(--color-border); }
+  .mt-step-planned::before { border-left-style: dashed; }
+  .mt-step:last-child::before { display: none; }
+}
+
+/* Trends */
+.mt-trend-grid { display: grid; grid-template-columns: 1fr; gap: 0.9rem; }
+@media (min-width: 701px) { .mt-trend-grid { grid-template-columns: 1fr 1fr; } }
+.mt-trend { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.mt-trend-value { margin: 0; font-size: 1.6rem; font-weight: 650; line-height: 1.2; }
+.mt-trend-change { margin: 0.4rem 0 0; font-weight: 600; color: var(--color-accent); }
+.mt-trend p { margin: 0; }
+.mt-gaps { margin: 0.3rem 0 0; padding-left: 1.1rem; color: var(--color-muted); }
+.mt-chart-host { margin: 0.5rem 0 0; }
+
+/* Chart (chart.js builds real HTML text labels so they scale with the page font) */
+.mt .chart { --chart-h: 150px; width: 100%; max-width: 560px; font-size: 0.85rem; }
+.mt .chart-unit { color: var(--color-muted); margin: 0 0 4px; font-size: 0.8rem; }
+.mt .chart .plot { position: relative; height: var(--chart-h); margin-left: 3.4em; }
+.mt .chart .grid-line { position: absolute; left: 0; right: 0; border-top: 1px solid var(--color-border); }
+.mt .chart .axis-base { position: absolute; left: 0; right: 0; bottom: 0; border-top: 1px solid var(--color-muted); }
+.mt .chart .y-tick { position: absolute; right: 100%; margin-right: 8px; transform: translateY(-50%); color: var(--color-muted); font-size: 0.8rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mt .chart .lines { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+.mt .chart .series-line { stroke: var(--color-accent); stroke-width: 3; fill: none; }
+.mt .chart .dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--color-accent); border: 2px solid #fff; box-sizing: content-box; }
+.mt .chart .x-axis { position: relative; height: 3em; margin-left: 3.4em; margin-top: 6px; }
+.mt .chart .x-label { position: absolute; top: 0; transform: translateX(-50%); text-align: center; white-space: nowrap; line-height: 1.3; }
+.mt .chart .x-wave { display: block; font-weight: 650; font-size: 0.82rem; }
+.mt .chart .x-date { display: block; color: var(--color-muted); font-size: 0.78rem; }
+
+/* Results tables */
+.mt-visit { margin: 0 0 0.9rem; padding: 0.4rem 1.1rem 1rem; }
+.mt-visit summary { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; cursor: pointer; min-height: 44px; padding: 0.55rem 0; }
+.mt-visit-title { font-weight: 650; }
+.mt-table-wrap { overflow-x: auto; }
+.mt-table { width: 100%; border-collapse: collapse; }
+.mt-table th, .mt-table td { text-align: left; vertical-align: top; padding: 0.55rem 0.4rem; border-bottom: 1px solid var(--color-border); font-size: 0.92rem; }
+.mt-table thead th { font-size: 0.78rem; color: var(--color-muted); font-weight: 600; }
+.mt-table th[scope="row"] { font-weight: 500; width: 62%; }
+.mt-domain-row th { background: var(--mt-tint); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
+.mt-measure { display: block; font-weight: 600; }
+.mt-measure-note { display: block; font-weight: 400; color: var(--color-muted); font-size: 0.8rem; }
+.mt-value { font-weight: 650; white-space: nowrap; }
+.mt-state { font-weight: 500; color: var(--color-muted); white-space: normal; }
+.mt-empty { border-style: dashed; }
+.mt-footnotes { color: var(--color-muted); border-top: 1px solid var(--color-border); padding-top: 0.9rem; max-width: 46rem; }
+.mt-footnotes p { margin: 0 0 0.5rem; }
+
+@media (forced-colors: active) {
+  .mt .chart .dot { background: CanvasText; border-color: Canvas; }
+  .mt .chart .series-line { stroke: CanvasText; }
+}
+@media print { .mt-skip, #topbar-actions, .mt-details-inline { display: none; } }
+@media (prefers-reduced-motion: reduce) { .mt * { transition: none !important; animation: none !important; } }
