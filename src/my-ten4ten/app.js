@@ -16,6 +16,8 @@ import {
 const root = document.getElementById('mt-root');
 const who = document.getElementById('mt-who');
 const signOutButton = document.getElementById('mt-signout');
+const switchButton = document.getElementById('mt-switch');
+const homeLink = document.getElementById('mt-home');
 const statusLine = document.getElementById('mt-status');
 const adapter = createSyntheticAdapter();
 
@@ -39,6 +41,7 @@ function showEntry(notice = '') {
   current = 'entry';
   who.textContent = '';
   signOutButton.hidden = true;
+  switchButton.hidden = true;
 
   const ttid = h('input', {
     id: 'mt-ttid', type: 'text', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', placeholder: 'T4T-XXXX-XXXX', required: true,
@@ -247,6 +250,7 @@ async function showDashboard() {
   current = 'dashboard';
   who.textContent = session.label;
   signOutButton.hidden = false;
+  switchButton.hidden = false;
   replaceChildren(root, h('p', { class: 'mt-muted', text: 'Loading your results…' }));
 
   let catalogue = null;
@@ -281,6 +285,18 @@ async function showDashboard() {
 signOutButton.addEventListener('click', () => {
   clearSession();
   showEntry('You have signed out of the demo.');
+});
+
+function switchDemoAccount() {
+  clearSession();
+  showEntry();
+  document.getElementById('mt-ttid')?.focus();
+}
+
+switchButton.addEventListener('click', switchDemoAccount);
+homeLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  switchDemoAccount();
 });
 
 // Re-check the demo session while the dashboard is open and when restored from the back/forward cache.

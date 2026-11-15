@@ -79,6 +79,24 @@ test('the entry page is minimal and carries the prototype notice', async () => {
   assert.equal(sections, 0, 'no intro cards in the page shell');
 });
 
+test('demo home and account switch clear only the simulated session and preserve Atlas navigation', async () => {
+  const html = await read('my-ten4ten', 'index.html');
+  assert.match(html, /<a class="mt-brand-link" id="mt-home" href="%BASE_URL%my-ten4ten\/">My TEN4TEN \(demo\)<\/a>/);
+  assert.match(html, /class="mt-toplink" href="%BASE_URL%">Tiny Towns Atlas<\/a>/);
+  assert.match(html, /id="mt-switch"[^>]*hidden>Switch demo account<\/button>/);
+
+  const app = await read('src', 'my-ten4ten', 'app.js');
+  assert.match(app, /function switchDemoAccount\(\)\s*\{\s*clearSession\(\);\s*showEntry\(\);/);
+  assert.match(app, /switchButton\.addEventListener\('click', switchDemoAccount\)/);
+  assert.match(app, /homeLink\.addEventListener\('click',[\s\S]*?event\.preventDefault\(\);\s*switchDemoAccount\(\);/);
+  assert.match(app, /switchButton\.hidden = false/);
+  assert.match(app, /switchButton\.hidden = true/);
+
+  const session = await read('src', 'my-ten4ten', 'session.js');
+  assert.match(session, /const KEY = 'my-ten4ten\.demo-session'/);
+  assert.match(session, /sessionStorage\.removeItem\(KEY\)/);
+});
+
 test('the page sets a Content-Security-Policy with no inline scripts', async () => {
   const html = await read('my-ten4ten', 'index.html');
   const csp = html.match(/Content-Security-Policy"\s+content="([^"]+)"/)[1];
