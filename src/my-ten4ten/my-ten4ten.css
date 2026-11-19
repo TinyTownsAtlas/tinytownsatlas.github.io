@@ -2,6 +2,9 @@
    system font, 6px radii, 1px borders and 700px breakpoint. Scoped to body.mt. */
 
 body.mt {
+  --color-accent: #e24f12;
+  --mt-orange-light: #f79d0f;
+  --mt-orange-deep: #b6630e;
   --mt-tint: #f0f4f8;
   --mt-ready-bg: #e6eef6;
   --mt-ready-ink: #1f4a70;
@@ -13,14 +16,9 @@ body.mt {
   min-height: 100%;
   line-height: 1.5;
 }
-.mt-dashboard {
-  --color-accent: #e24f12;
-  --mt-orange-light: #f79d0f;
-  --mt-orange-deep: #b6630e;
-}
-.mt-dashboard .mt-notice { border-bottom-color: #f4c38a; }
-.mt-dashboard .mt-dot { background: var(--mt-orange-light); box-shadow: 0 0 0 1px var(--mt-orange-deep); }
-.mt-dashboard .mt-step-check .mt-dot { background: var(--mt-orange-deep); box-shadow: 0 0 0 1px var(--mt-orange-deep); }
+.mt .mt-notice { border-bottom-color: #f4c38a; }
+.mt .mt-dot { background: var(--mt-orange-light); box-shadow: 0 0 0 1px var(--mt-orange-deep); }
+.mt .mt-step-check .mt-dot { background: var(--mt-orange-deep); box-shadow: 0 0 0 1px var(--mt-orange-deep); }
 
 .mt a { color: var(--color-accent); }
 .mt a:focus-visible, .mt button:focus-visible, .mt input:focus-visible, .mt summary:focus-visible {
