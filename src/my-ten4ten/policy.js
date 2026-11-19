@@ -202,3 +202,7 @@ export function buildComparisons(visits, measures) {
   }
   return out;
 }
+
+export function comparisonsForView(view, measures, enabled) {
+  return enabled === true ? buildComparisons(view.visits, measures) : [];
+}

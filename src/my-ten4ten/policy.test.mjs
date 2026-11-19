@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   buildComparisons,
+  comparisonsForView,
   isRealIsoDate,
   isValidTtid,
   releaseMeasure,
@@ -31,6 +32,27 @@ const visit = {
   },
 };
 const approved = { status: 'approved', domains: D_ALL };
+
+test('all ten participant fixtures sanitise with withheld values absent', async () => {
+  const dir = path.join(HERE, '..', '..', 'demo', 'my-ten4ten', 'data', 'participant_views');
+  const files = (await import('node:fs/promises')).readdir;
+  const names = (await files(dir)).filter((name) => name.endsWith('.json'));
+  assert.equal(names.length, 10);
+  for (const name of names) {
+    const raw = JSON.parse(await readFile(path.join(dir, name), 'utf8'));
+    const clean = sanitiseView(raw, M);
+    assert.ok(clean, name);
+    for (const visit of clean.visits) {
+      if (visit.status !== 'results_ready') assert.deepEqual(visit.measures, [], `${name}: unavailable visit`);
+      for (const m of visit.measures) {
+        if (m.state !== 'recorded') assert.equal(Object.hasOwn(m, 'value'), false, `${name}: withheld value`);
+      }
+    }
+    const text = JSON.stringify(clean);
+    assert.equal(/W[12]-\d{4}/.test(text), false, `${name}: source identifier leaked`);
+    assert.equal(/raw_value|entry_under_check|placeholder_value|link_status/.test(text), false, `${name}: internal field leaked`);
+  }
+});
 
 test('only identity_verified links can release a visit', () => {
   for (const link_status of ['candidate', 'case_reviewed', 'rejected']) {
@@ -142,6 +164,15 @@ test('buildComparisons only compares consecutive results_ready screenings with r
   assert.equal(sbp.changes[0].delta, -9);
   assert.equal(sbp.changes[0].direction, 'lower');
   assert.equal(out.some((c) => c.id === 'walk_6mw'), false, 'no walk comparison when one side is under review');
+});
+
+test('comparison configuration suppresses all individual comparisons when disabled', () => {
+  const view = { visits: [
+    { visit_key: 'a', label: 'Wave 1', date: '2026-03-10', status: 'results_ready', measures: [{ id: 'sbp', state: 'recorded', value: 120 }] },
+    { visit_key: 'b', label: 'Wave 2', date: '2026-09-10', status: 'results_ready', measures: [{ id: 'sbp', state: 'recorded', value: 130 }] },
+  ] };
+  assert.deepEqual(comparisonsForView(view, M, false), []);
+  assert.ok(comparisonsForView(view, M, true).length > 0);
 });
 
 test('buildComparisons carries category labels so the page can show readable changes', () => {

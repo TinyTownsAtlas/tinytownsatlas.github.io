@@ -6,7 +6,7 @@ import './my-ten4ten.css';
 import { createSyntheticAdapter } from './adapter.js';
 import { CONFIG } from './config.js';
 import { clearSession, getSession, startSession } from './session.js';
-import { buildComparisons, sanitiseView } from './policy.js';
+import { comparisonsForView, sanitiseView } from './policy.js';
 import { renderLineChart } from './chart.js';
 import { h, replaceChildren } from './dom.js';
 import {
@@ -244,6 +244,53 @@ function footnotes(view) {
     h('p', { text: 'Not a diagnosis and not medical advice. If you have questions or feel unwell, talk to your GP or local health service. In an emergency, call 000.' }));
 }
 
+function printSummary(view, catalogue, comparisons) {
+  const visits = view.visits;
+  const visitRows = visits.map((visit) => {
+    const measures = visit.status === 'results_ready'
+      ? visit.measures.filter((m) => m.state === 'recorded').map((m) => {
+        const entry = catalogue.measures[m.id];
+        return h('li', { text: `${entry.label}: ${formatValue(entry, m.value)}` });
+      }) : [];
+    const status = visit.status === 'results_ready' ? 'Results ready' : statusNote(visit.status);
+    return h('article', { class: 'mt-print-visit' },
+      h('h4', { text: `${visit.label} · ${formatDate(visit.date)}` }),
+      h('p', { text: status }),
+      measures.length ? h('ul', {}, measures) : h('p', { text: 'No approved recorded measurements available for this screening.' }),
+      visit.some_results_not_shown ? h('p', { text: 'Some results are not included because they are not yet approved for return.' }) : null);
+  });
+  const compareRows = comparisons.flatMap((c) => {
+    const pair = c.changes.at(-1);
+    if (!pair) return [];
+    const { from, to } = pair;
+    const change = c.kind === 'number'
+      ? `${pair.direction === 'higher' ? 'Higher' : pair.direction === 'lower' ? 'Lower' : 'Unchanged'} by ${Number(Math.abs(pair.delta)).toFixed(c.decimals)}${c.unit ? ` ${c.unit}` : ''}`
+      : `${c.categories[from.value] || from.value} → ${c.categories[to.value] || to.value}`;
+    const valueCell = (p) => h('td', {},
+      h('span', { class: 'mt-print-cell-value', text: formatValue(c, p.value) }),
+      h('span', { class: 'mt-print-cell-date', text: `${p.waveText} · ${p.date}` }));
+    return [h('tr', {}, h('th', { scope: 'row', text: c.label }), valueCell(from), valueCell(to), h('td', { text: change }))];
+  });
+  return h('section', { class: 'mt-print-summary', 'aria-label': 'GP summary for printing' },
+    h('img', { class: 'mt-print-brand', src: `${import.meta.env.BASE_URL}branding/CHRI-TEN4TEN-white-horiz.png`, alt: 'CHRI · TEN4TEN' }),
+    h('h2', { text: 'TEN4TEN summary for your GP' }),
+    h('p', { text: 'Synthetic demonstration only · Prepared from the results shown in this participant view.' }),
+    h('h3', { text: 'Screenings and approved measurements' }), visitRows,
+    view.planned.length ? h('div', {}, h('h3', { text: 'Planned screenings' }),
+      h('ul', {}, view.planned.map((p) => h('li', { text: `${p.label} — planned; date to be confirmed.` })))) : null,
+    CONFIG.showIndividualComparisons && compareRows.length ? h('div', {},
+      h('h3', { text: 'Comparisons' }),
+      h('p', { text: 'Only recorded values from screenings with checked, approved results are compared. Measurements can vary between days and may not be directly comparable across protocols.' }),
+      h('div', { class: 'mt-table-wrap' }, h('table', { class: 'mt-table' },
+        h('thead', {}, h('tr', {}, [
+          h('th', { scope: 'col', text: 'Measure' }),
+          h('th', { scope: 'col', text: 'Earlier screening' }),
+          h('th', { scope: 'col', text: 'Later screening' }),
+          h('th', { scope: 'col', text: 'Change' }),
+        ])), h('tbody', {}, compareRows)))) : null,
+    h('p', { class: 'mt-print-caveat', text: 'Not a diagnosis or medical advice. This is synthetic demo data. Results may be incomplete or unavailable; withheld values are not shown.' }));
+}
+
 async function showDashboard() {
   const session = getSession();
   if (!session) { showEntry('Your demo session has ended. Please sign in again.'); return; }
@@ -266,14 +313,16 @@ async function showDashboard() {
     return;
   }
   try {
-    const comparisons = CONFIG.showIndividualComparisons ? buildComparisons(view.visits, catalogue.measures) : [];
+    const comparisons = comparisonsForView(view, catalogue.measures, CONFIG.showIndividualComparisons);
     replaceChildren(root,
+      h('div', { class: 'mt-print-actions' }, h('button', { class: 'mt-btn', type: 'button', text: 'Print summary for GP', onclick: () => window.print() })),
       h('h2', { id: 'mt-title', class: 'mt-title', tabindex: '-1', text: 'Your results' }),
       summaryStrip(view, comparisons),
       h('section', { class: 'mt-section', 'aria-labelledby': 'mt-screenings-h' }, h('h3', { id: 'mt-screenings-h', text: 'Screenings' }), timeline(view)),
       CONFIG.showIndividualComparisons ? trendsSection(view, catalogue, comparisons) : null,
       resultsSection(view, catalogue),
-      footnotes(view));
+      footnotes(view),
+      printSummary(view, catalogue, comparisons));
     announce('Your results have loaded.');
     document.getElementById('mt-title')?.focus();
   } catch (err) {

@@ -48,6 +48,14 @@ body {
   margin: 0;
 }
 
+#chri-mark {
+  display: block;
+  width: 76px;
+  height: 40px;
+  object-fit: contain;
+  margin-left: auto;
+}
+
 #subtitle {
   margin: 0;
   font-size: 0.8rem;
