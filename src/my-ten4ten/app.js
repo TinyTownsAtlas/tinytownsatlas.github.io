@@ -20,6 +20,11 @@ const switchButton = document.getElementById('mt-switch');
 const homeLink = document.getElementById('mt-home');
 const statusLine = document.getElementById('mt-status');
 const adapter = createSyntheticAdapter();
+const headerBrand = h('img', {
+  class: 'mt-header-brand',
+  src: `${import.meta.env.BASE_URL}branding/CHRI-TEN4TEN-white-horiz.png`,
+  alt: 'CHRI · TEN4TEN',
+});
 
 // A meta Content-Security-Policy cannot forbid framing and static hosting sends no headers, so the
 // page refuses to run inside a frame (clickjacking guard for the sign-in form).
@@ -39,6 +44,8 @@ function announce(text) {
 
 function showEntry(notice = '') {
   current = 'entry';
+  document.body.classList.remove('mt-dashboard');
+  headerBrand.remove();
   who.textContent = '';
   signOutButton.hidden = true;
   switchButton.hidden = true;
@@ -295,6 +302,8 @@ async function showDashboard() {
   const session = getSession();
   if (!session) { showEntry('Your demo session has ended. Please sign in again.'); return; }
   current = 'dashboard';
+  document.body.classList.add('mt-dashboard');
+  document.getElementById('topbar-actions').before(headerBrand);
   who.textContent = session.label;
   signOutButton.hidden = false;
   switchButton.hidden = false;
